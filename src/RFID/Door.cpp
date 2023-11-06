@@ -101,7 +101,7 @@ void loop()
     digitalWrite(blue, HIGH);
     digitalWrite(buzzer, LOW);
     delay(5000);
-    digitalWrite(lock, HIGH);
+    digitalWrite(lock, HIGH); // if relay is closed HIGH
     delay(2500);    
   }
  
@@ -113,7 +113,7 @@ void loop()
     lcd.clear();
     lcd.setCursor(0,0);
     lcd.println("Access denied");
-    digitalWrite(lock, HIGH);
+    digitalWrite(lock, LOW); // if relay is open LOW
     delay(1000);
     digitalWrite(red, LOW);
     digitalWrite(blue, HIGH);
