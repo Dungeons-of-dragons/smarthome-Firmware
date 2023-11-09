@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include "defs.h"
-#include "drivers/sensors/dth11.h"
+#include "dth11.h"
 
 volatile boolean gaspresent = false;
 volatile boolean motiondetected = false; 

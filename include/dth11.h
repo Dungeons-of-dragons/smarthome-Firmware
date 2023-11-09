@@ -7,4 +7,3 @@ float readtemp();
 float readhumidity();
 
 #endif 
-
