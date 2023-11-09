@@ -3,6 +3,6 @@
 
 void initialize();
 void check_for_card();
-bool check_card_is_present();
+bool card_authorization();
 
 #endif

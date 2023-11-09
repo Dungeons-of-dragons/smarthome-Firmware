@@ -3,7 +3,7 @@
 
 #include "Arduino.h"
 
-#define AUTHORIZED_CARDS 73 78 D3 1C
+// #define AUTHORIZED_CARDS ""
 
 //pinout definitions 
 #define DHT11PIN 16

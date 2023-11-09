@@ -39,8 +39,8 @@ bool card_authorization(){
   }
   Serial.println();
   Serial.print("Message : ");
-  content.toUpperCase();  
-  if (content.substring(1).toInt() == static_cast) // Make sure you change this with your own UID number
+  content.toUpperCase(); 
+  if (content.substring(1) == 73 78 D3 1C) // Make sure you change this with your own UID number
   {
     //access granted
     Serial.println("Authorised access");
@@ -87,7 +87,7 @@ void display_tag() {
   lcd.clear();
   lcd.setCursor(0,0);
   lcd.print("Scan card");
-  Serial.print("UID tag :")
+  Serial.print("UID tag :");
   }
   // Ask user to scan card
 

@@ -2,6 +2,7 @@
 #include "defs.h"
 #include "dth11.h"
 #include "door.h"
+#include "MQ2.h"
 
 volatile boolean gaspresent = false;
 volatile boolean motiondetected = false; 
