@@ -1,5 +1,5 @@
 #include "defs.h"
-#include "dth11.h"
+#include "dht11.h"
 
 DHT dht(DHT11PIN, DHT11);
 

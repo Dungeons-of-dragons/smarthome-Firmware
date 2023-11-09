@@ -1,5 +1,5 @@
-#ifndef DTH11_H
-#define DTH11_H 
+#ifndef DHT11_H
+#define DHT11_H 
 
 #include "DHT.h"
 

@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include "defs.h"
-#include "dth11.h"
+#include "DHT11.h"
 #include "door.h"
 #include "MQ2.h"
 
