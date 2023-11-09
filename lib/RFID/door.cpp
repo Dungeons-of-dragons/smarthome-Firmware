@@ -6,6 +6,7 @@
 #include <MFRC522.h>
 #include "defs.h"
 
+
 // setup
 MFRC522 mfrc522(SS_PIN, RST_PIN);  
 LiquidCrystal_I2C lcd(0x27, 16, 2);
@@ -40,7 +41,7 @@ bool card_authorization(){
   Serial.println();
   Serial.print("Message : ");
   content.toUpperCase(); 
-  if (content.substring(1) == 73 78 D3 1C) // Make sure you change this with your own UID number
+  if (content.substring(1) == "73 78 D3 1C") // Make sure you change this with your own UID number
   {
     //access granted
     Serial.println("Authorised access");
