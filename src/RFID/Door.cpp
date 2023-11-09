@@ -1,24 +1,11 @@
 // LCD display library
 #include <LiquidCrystal_I2C.h>
-// installing libraries necessary for the RFID card reader
 #include <Wire.h>
 #include <EEPROM.h>
-
 #include <SPI.h>
 #include <MFRC522.h>
+#include "defs.h"
 
-// RFID card reader pins
-#define SS_PIN 10
-#define RST_PIN 9
-
-// LED pinouts
-#define red 5
-#define blue 3
-#define green 4
-
-// Electromagnetic lock and buzzer pinouts
-#define lock 6
-#define buzzer 2
 
 // initializing the RFID card reader
 MFRC522 mfrc522(SS_PIN, RST_PIN);  
@@ -26,15 +13,8 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 void setup() 
 {
-  Serial.begin(9600);  
-
-  //setting pin modes for actuators and signal devices.
-  pinMode(red, OUTPUT);
-  pinMode(blue, OUTPUT);
-  pinMode(green, OUTPUT);
   pinMode(buzzer, OUTPUT);
   pinMode(lock, OUTPUT);
-
   // LCD setup
   SPI.begin(); 
   lcd.init();
@@ -45,9 +25,12 @@ void setup()
   // initialize RFID card reader
   mfrc522.PCD_Init();   
   Serial.println();
-
 }
 
+
+bool checkcardispresent(){ 
+   
+}
 void loop() 
 {
   // Check if card is available for reading
@@ -81,15 +64,12 @@ void loop()
   Serial.print("Message : ");
   content.toUpperCase();
   lcd.print("Scan Card");    
-  digitalWrite(blue, HIGH); 
 
   // Checks if the serial number in the card is given authorization (take information from DB)
   if (content.substring(1) == "73 78 D3 1C") // Make sure you change this with your own UID number
   {
     //access granted
     Serial.println("Authorised access");
-    digitalWrite(blue, LOW);
-    digitalWrite(green, HIGH);
     digitalWrite(buzzer, HIGH);    
     lcd.clear();
     lcd.setCursor(0,0);
@@ -97,8 +77,6 @@ void loop()
     digitalWrite(lock, LOW);
     Serial.println();
     delay(1000);
-    digitalWrite(green, LOW);
-    digitalWrite(blue, HIGH);
     digitalWrite(buzzer, LOW);
     delay(5000);
     digitalWrite(lock, HIGH); // if relay is closed HIGH
@@ -108,17 +86,11 @@ void loop()
   // Access Denied
   else {
     Serial.println(" Access denied");
-    digitalWrite(blue, LOW);
-    digitalWrite(red, HIGH);
     lcd.clear();
     lcd.setCursor(0,0);
     lcd.println("Access denied");
     digitalWrite(lock, LOW); // if relay is open LOW
-    delay(1000);
-    digitalWrite(red, LOW);
-    digitalWrite(blue, HIGH);
-    delay(2500);
-    
+    delay(1000);    
   }
 lcd.clear();
 lcd.setCursor(0,0);

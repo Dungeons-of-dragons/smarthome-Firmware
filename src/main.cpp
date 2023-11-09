@@ -1,23 +1,17 @@
 #include <Arduino.h>
-#include "DHT.h"
-#define DHT11PIN 16
+#include "defs.h"
+#include "drivers/sensors/dth11.h"
 
-DHT dht(DHT11PIN, DHT11);
+volatile boolean gaspresent = false;
+volatile boolean motiondetected = false; 
+
 void setup()
 {
-  
   Serial.begin(115200);
-  dht.begin();
 }
 
 void loop()
 {
-  float humidity = dht.readHumidity();
-  float temperature = dht.readTemperature();
-  Serial.print("Temperature: ");
-  Serial.print(temperature);
-  Serial.print("ºC ");
-  Serial.print("Humidity: ");
-  Serial.println(humidity);
-  delay(1000);
+  float humidity = readhumidity();
+  float temperature = readtemp();
 }
