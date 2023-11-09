@@ -10,6 +10,7 @@
 MFRC522 mfrc522(SS_PIN, RST_PIN);  
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
+
 void initialize() 
 {
   pinMode(buzzer, OUTPUT);
@@ -24,11 +25,10 @@ void initialize()
 
   // initialize RFID card reader
   mfrc522.PCD_Init();   
-  Serial.println();
 }
 
 
-bool check_card_is_present(){ 
+bool card_authorization(){ 
   String content= "";
   for (byte i = 0; i < mfrc522.uid.size; i++) 
   {
@@ -39,9 +39,8 @@ bool check_card_is_present(){
   }
   Serial.println();
   Serial.print("Message : ");
-  content.toUpperCase();
-  lcd.print("Scan Card");    
-  if (content.substring(1) == "73 78 D3 1C") // Make sure you change this with your own UID number
+  content.toUpperCase();  
+  if (content.substring(1).toInt() == static_cast) // Make sure you change this with your own UID number
   {
     //access granted
     Serial.println("Authorised access");
@@ -83,12 +82,12 @@ void check_for_card()
   }  
 }
   
-void lcd_scan() {
+void display_tag() {
   lcd.begin(16,2);
   lcd.clear();
   lcd.setCursor(0,0);
   lcd.print("Scan card");
-  Serial.print("UID tag :");
+  Serial.print("UID tag :")
   }
   // Ask user to scan card
 

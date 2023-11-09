@@ -3,6 +3,8 @@
 
 #include "Arduino.h"
 
+#define AUTHORIZED_CARDS 73 78 D3 1C
+
 //pinout definitions 
 #define DHT11PIN 16
 #define MQ2_INPUT 2
@@ -14,7 +16,7 @@
 
 // Electromagnetic lock and buzzer pinouts
 #define lock 6
-#define buzzer 2
+#define buzzer 25
 
 #endif
 

@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "defs.h"
 #include "dth11.h"
+#include "door.h"
 
 volatile boolean gaspresent = false;
 volatile boolean motiondetected = false; 
@@ -15,3 +16,4 @@ void loop()
   float humidity = readhumidity();
   float temperature = readtemp();
 }
+
