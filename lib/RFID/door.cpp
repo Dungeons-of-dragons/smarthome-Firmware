@@ -4,7 +4,7 @@
 #include <EEPROM.h>
 #include <SPI.h>
 #include <MFRC522.h>
-#include "defs.h"
+#include "door.h"
 
 
 // setup
@@ -95,3 +95,4 @@ void display_tag() {
 // lcd.clear();
 // lcd.setCursor(0,0);
 // lcd. ("Scan Card");
+
