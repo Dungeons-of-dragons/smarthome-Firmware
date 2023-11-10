@@ -1,17 +1,16 @@
 #include <Arduino.h> 
-const int GAS_LED = 4;
-const int MQ2_INPUT = 2; 
+#include "defs.h"
 
-void setup() {
-  Serial.begin(115200);  
-  pinMode(GAS_LED, OUTPUT);
-}
+volatile boolean gaspresent = false;
 
 bool Gas_detected(){
+  pinMode(GAS_LED, OUTPUT);
   int sensorout = analogRead(MQ2_INPUT); 
     if (sensorout > 1800) {   
     Serial.println("Gas");  
-    digitalWrite (GAS_LED, HIGH) ; 
+    digitalWrite (GAS_LED, HIGH); 
+    gaspresent = true;
+
       return true; 
   }
   else {
