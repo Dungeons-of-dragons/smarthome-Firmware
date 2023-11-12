@@ -15,7 +15,7 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 void initialize() 
 {
   pinMode(buzzer, OUTPUT);
-  pinMode(lock, OUTPUT);
+  pinMode(lock_pin, OUTPUT);
   // LCD setup
   SPI.begin(); 
   lcd.init();
@@ -49,12 +49,12 @@ bool card_authorization(){
     lcd.clear();
     lcd.setCursor(0,0);
     lcd.println("Authorised access");    
-    digitalWrite(lock, LOW);
+    digitalWrite(lock_pin, LOW);
     Serial.println();
     delay(1000);  
     digitalWrite(buzzer, HIGH);
     delay(5000);
-    digitalWrite(lock, HIGH); // if relay is closed HIGH
+    digitalWrite(lock_pin, HIGH); // if relay is closed HIGH
     delay(2500);
     return true;
   }
@@ -63,7 +63,7 @@ bool card_authorization(){
     lcd.clear();
     lcd.setCursor(0,0);
     lcd.println("Access denied");
-    digitalWrite(lock, LOW); // if relay is open LOW
+    digitalWrite(lock_pin, LOW); // if relay is open LOW
     delay(1000);  
     return false;  
   }
