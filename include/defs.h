@@ -16,9 +16,9 @@
 #define RST_PIN 22
 
 // Led pinouts 
-#define red 5
-#define blue 3
-#define green 4
+#define red 13
+#define blue 14
+#define green 12
 
 
 #define lock_pin 7
