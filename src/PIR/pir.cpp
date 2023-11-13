@@ -13,7 +13,6 @@ void IRAM_ATTR movement_detection()
   digitalWrite(red, HIGH);
   digitalWrite(green, LOW); 
   motiondetected = true;
-  last_trigger = millis();
 }
 
 
@@ -23,6 +22,8 @@ void IRAM_ATTR movement_detection()
 void motion_setup(){
   pinMode(PIR_PIN, INPUT_PULLUP);
   pinMode(red, OUTPUT);
+  pinMode(green, OUTPUT);
+  digitalWrite(green, HIGH); 
   digitalWrite(red, LOW);
   attachInterrupt(digitalPinToInterrupt(PIR_PIN), movement_detection, LOW); // @bug should use rising not LOW. 
 }

@@ -2,7 +2,7 @@
 #include <pt.h> 
 
 // declare three protothreads
-static struct pt ptreaddht, ptdetectgas, pt3;
+static struct pt ptreaddht, ptdetectgas, ptdetectmotion;
 
 
 // First protothread function to read DHT  every 5 second
@@ -20,7 +20,7 @@ static int protothreadReadDHT(struct pt *pt)
   PT_BEGIN(pt);
   while(1) {
     lastTimeread = millis();
-    PT_WAIT_UNTIL(pt, millis() - lastTimeread > 5000);
+    PT_WAIT_UNTIL(pt, millis() - lastTimeread > interval);
     float temp = readtemp();
     float humid = readhumidity(); 
     Serial.printf("temp: %.3f, humid: %.3f\n ", temp, humid);
@@ -44,6 +44,23 @@ static int protothreaddetectgas(struct pt *pt){
   PT_END(pt);
 }
 
+//third protothread to detect motion 
+static int protothreaddetectmotion(struct pt *pt){
+  static unsigned long lastTimeread =0;
+  PT_BEGIN(pt);
+  while(1){
+    lastTimeread = millis();
+    PT_WAIT_UNTIL(pt, (motiondetected));
+    movement_detection();
+    PT_WAIT_UNTIL(pt, (motiondetected && (millis()- lastTimeread > interval)));
+    Serial.println("Motion has stopped");
+    digitalWrite(red, LOW);
+    digitalWrite(green,HIGH);
+    motiondetected = false;
+  }
+  PT_END(pt);
+}
+
 
 
 // Use events to avoid blocking code
@@ -60,11 +77,11 @@ static int protothreaddetectgas(struct pt *pt){
  */
 void connected_to_ap(WiFiEvent_t wifi_event, WiFiEventInfo_t wifi_info)
 {
+  static boolean wifi_connected = true;
   Serial.println("[+] Connected to the WiFi network");
 }
 
 // Handle disconnection
-
 /**
  * The function handles the event of being disconnected from a WiFi access point and attempts to
  * reconnect.
@@ -111,6 +128,7 @@ void setup()
 
   PT_INIT(&ptreaddht);
   PT_INIT(&ptdetectgas);
+  PT_INIT(&ptdetectmotion);
 }
 
 
@@ -119,14 +137,7 @@ void loop()
 {
   protothreadReadDHT(&ptreaddht);
   protothreaddetectgas(&ptdetectgas);
-
-  current_time = millis();
-  if(motiondetected && (current_time - last_trigger > interval)) {
-    Serial.println("Motion has stopped");
-    digitalWrite(red, LOW);
-    digitalWrite(green,HIGH);
-    motiondetected = false;
-  }
+  protothreaddetectmotion(&ptdetectmotion);
 }
 
 
