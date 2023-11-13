@@ -3,12 +3,12 @@
 
 #include "Arduino.h"
 
-// #define AUTHORIZED_CARDS ""
+// Gpios 6, 7, 8, 9, 10 and 11 are a no go for ESP32 to use
 
 //pinout definitions 
 #define DHT11PIN 16
 #define MQ2_INPUT 2
-#define GAS_LED 6
+#define GAS_LED 12
 #define CURRENT_PIN 34
 
 // RFID card reader pins
@@ -21,7 +21,7 @@
 #define green 12
 
 
-#define lock_pin 7
+#define lock_pin 18
 #define buzzer 25
 
 

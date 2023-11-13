@@ -25,7 +25,6 @@ void motion_setup(){
   pinMode(green, OUTPUT);
   digitalWrite(green, HIGH); 
   digitalWrite(red, LOW);
-  attachInterrupt(digitalPinToInterrupt(PIR_PIN), movement_detection, LOW); // @bug should use rising not LOW. 
 }
 
 

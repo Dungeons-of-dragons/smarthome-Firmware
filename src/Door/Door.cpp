@@ -1,15 +1,6 @@
 // LCD display library
-#include <LiquidCrystal_I2C.h>
-#include <Wire.h>
-#include <EEPROM.h>
-#include <SPI.h>
-#include <MFRC522.h>
 #include "door.h"
-
-
-// setup
-MFRC522 mfrc522(SS_PIN, RST_PIN);  
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+#include "main.h"
 
 
 void initialize() 
@@ -22,7 +13,9 @@ void initialize()
   lcd.backlight();
   lcd.begin(16,2);
   lcd.clear(); 
-  lcd.print("Scan Card!");
+  lcd.setCursor(0,0);
+  lcd.printstr("Welcome to D.O.D");
+  lcd.noAutoscroll();
 
   // initialize RFID card reader
   mfrc522.PCD_Init();   
@@ -59,7 +52,6 @@ bool card_authorization(){
     return true;
   }
   else {
-    Serial.println(" Access denied");
     lcd.clear();
     lcd.setCursor(0,0);
     lcd.println("Access denied");

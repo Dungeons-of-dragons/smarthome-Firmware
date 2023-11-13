@@ -1,82 +1,98 @@
 #include "main.h"
-#include <pt.h> 
+#include <pt.h>
+
+
+
+MFRC522 mfrc522(SS_PIN, RST_PIN);  
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+char ssid[] = SECRET_SSID;
+char pass[] = SECRET_PASS; //network password saved in a secrets file 
+
 
 // declare three protothreads
 static struct pt ptreaddht, ptdetectgas, ptdetectmotion, ptreadvoltage;
-
 
 // First protothread function to read DHT  every 5 second
 /**
  * The function "protothreadReadDHT" reads temperature and humidity values from a sensor every 5
  * seconds and prints them to the serial monitor.
- * 
+ *
  * @param pt The parameter "pt" is a pointer to a struct of type "pt". This struct is used to implement
  * a protothread, which is a lightweight cooperative multitasking mechanism. The protothreadReadDHT
  * function is defined to take a pointer to this struct as a parameter so that it can use it
  */
+
+
 static int protothreadReadDHT(struct pt *pt)
 {
   static unsigned long lastTimeread = 0;
   PT_BEGIN(pt);
-  while(1) {
+  while (1)
+  {
     lastTimeread = millis();
     PT_WAIT_UNTIL(pt, millis() - lastTimeread > interval);
-    float temp = readtemp();
-    float humid = readhumidity(); 
-    Serial.printf("temp: %.3f, humid: %.3f\n", temp, humid);
-    //@todo insert user code to publish topics 
+    static float temp = readtemp();
+    static float humid = readhumidity();
+    Serial.printf("temp: %.3f, humid: %.3f\n", temp, humid); 
+    displaydht(temp, humid); 
+    //@todo insert user code to publish topics
   }
   PT_END(pt);
 }
 
-
-//second protothread to check for gas presence
-static int protothreaddetectgas(struct pt *pt){
-  static unsigned long lastTimeread = 0; 
+// second protothread to check for gas presence
+static int protothreaddetectgas(struct pt *pt)
+{
+  static unsigned long lastTimeread = 0;
   PT_BEGIN(pt);
-  while(1){
+  while (1)
+  {
     lastTimeread = millis();
     PT_WAIT_UNTIL(pt, Gas_detected);
     ets_printf("gas detected");
-    //@todo insert user functions to signal the user 
+    //@todo insert user functions to signal the user
     PT_WAIT_UNTIL(pt, !Gas_detected);
-    //@todo insert user code to notify user 
+    //@todo insert user code to notify user
   }
   PT_END(pt);
 }
 
-//third protothread to detect motion 
-static int protothreaddetectmotion(struct pt *pt){
-  static unsigned long lastTimeread =0;
+// third protothread to detect motion
+static int protothreaddetectmotion(struct pt *pt)
+{
+  static unsigned long lastTimeread = 0;
   PT_BEGIN(pt);
-  while(1){
+  while (1)
+  {
     lastTimeread = millis();
     PT_WAIT_UNTIL(pt, (motiondetected));
     movement_detection();
-    PT_WAIT_UNTIL(pt, (motiondetected && (millis()- lastTimeread > interval)));
+    PT_WAIT_UNTIL(pt, (motiondetected && (millis() - lastTimeread > interval)));
     ets_printf("Motion has stopped\n ");
     digitalWrite(red, LOW);
-    digitalWrite(green,HIGH);
+    digitalWrite(green, HIGH);
     motiondetected = false;
   }
   PT_END(pt);
 }
 
-// fourth protothread to measure voltage 
-static int protothreadmeasurevoltage(struct pt *pt){
-  static unsigned long lastTImeread = 0; 
+// fourth protothread to measure voltage
+static int protothreadmeasurevoltage(struct pt *pt)
+{
+  static unsigned long lastTImeread = 0;
   PT_BEGIN(pt);
-  while(1){
+  while (1)
+  {
     lastTImeread = millis();
-    PT_WAIT_UNTIL(pt, millis()- lastTImeread > intervolt);
+    PT_WAIT_UNTIL(pt, millis() - lastTImeread > intervolt);
     float avgvolt = readvoltage();
     double avgwatt = getWatts();
-    Serial.printf("Average voltage is %.3f, average watt is %d \n",avgvolt,avgwatt);
-    // @todo insert user code to publish to broker 
+    Serial.printf("Average voltage is %.3f, average watt is %d \n", avgvolt, avgwatt);
+    // @todo insert user code to publish to broker
   }
   PT_END(pt);
 }
-
 
 // Use events to avoid blocking code
 /**
@@ -128,6 +144,21 @@ void got_ip_from_ap(WiFiEvent_t wifi_event, WiFiEventInfo_t wifi_info)
 }
 
 
+void displaydht(float temp, float humidity){
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.println("temp:");
+    lcd.print(temp);
+    lcd.setCursor(0, 1); 
+    lcd.println("humidity:");
+    lcd.print(humidity);
+}
+
+void displayuserstate(bool userin){
+  lcd.clear();
+  lcd.setCursor(0,0);
+}
+
 void setup()
 {
   Serial.begin(115200);
@@ -140,14 +171,15 @@ void setup()
   Serial.println("\nConnecting");
 
   motion_setup();
+  attachInterrupt(digitalPinToInterrupt(PIR_PIN), movement_detection, RISING); // @bug should use rising not LOW. 
+
 
   PT_INIT(&ptreaddht);
   PT_INIT(&ptdetectgas);
   PT_INIT(&ptdetectmotion);
   PT_INIT(&ptreadvoltage);
+  initialize();  
 }
-
-
 
 void loop()
 {
@@ -156,5 +188,3 @@ void loop()
   protothreaddetectmotion(&ptdetectmotion);
   protothreadmeasurevoltage(&ptreadvoltage);
 }
-
-

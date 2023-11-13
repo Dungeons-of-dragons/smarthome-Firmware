@@ -4,18 +4,23 @@
 
 #include <Arduino.h>
 #include "defs.h"
-#include "dht11.h"
-#include "door.h"
-#include "MQ2.h"
+#include "DHT11/dht11.h"
+#include "Door/door.h"
+#include "MQ2/MQ2.h"
 #include "arduino_secrets.h"
 #include "WiFi.h"
 #include "PIR/pir.h"
 #include "ACS712/acs.h"
 
-boolean user_in = false; 
+static boolean user_in = false; 
 
 
-char ssid[] = SECRET_SSID;
-char pass[] = SECRET_PASS; //network password saved in a secrets file 
+extern MFRC522 mfrc522;  
+extern LiquidCrystal_I2C lcd;
+
+extern char ssid[];
+extern char pass[];
+
+void displaydht(float temp, float humidity);
 
 #endif
