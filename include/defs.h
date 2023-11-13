@@ -9,6 +9,7 @@
 #define DHT11PIN 16
 #define MQ2_INPUT 2
 #define GAS_LED 6
+#define CURRENT_PIN 34
 
 // RFID card reader pins
 #define SS_PIN 21
@@ -24,7 +25,7 @@
 #define buzzer 25
 
 
-#define PIR_PIN 34
+#define PIR_PIN 32
 
 #endif
 

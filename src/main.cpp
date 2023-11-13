@@ -2,7 +2,7 @@
 #include <pt.h> 
 
 // declare three protothreads
-static struct pt ptreaddht, ptdetectgas, ptdetectmotion;
+static struct pt ptreaddht, ptdetectgas, ptdetectmotion, ptreadvoltage;
 
 
 // First protothread function to read DHT  every 5 second
@@ -23,7 +23,8 @@ static int protothreadReadDHT(struct pt *pt)
     PT_WAIT_UNTIL(pt, millis() - lastTimeread > interval);
     float temp = readtemp();
     float humid = readhumidity(); 
-    Serial.printf("temp: %.3f, humid: %.3f\n ", temp, humid);
+    Serial.printf("temp: %.3f, humid: %.3f\n", temp, humid);
+    //@todo insert user code to publish topics 
   }
   PT_END(pt);
 }
@@ -37,9 +38,9 @@ static int protothreaddetectgas(struct pt *pt){
     lastTimeread = millis();
     PT_WAIT_UNTIL(pt, Gas_detected);
     ets_printf("gas detected");
-    // insert user functions to signal the user 
+    //@todo insert user functions to signal the user 
     PT_WAIT_UNTIL(pt, !Gas_detected);
-    //insert user code to notify user 
+    //@todo insert user code to notify user 
   }
   PT_END(pt);
 }
@@ -53,7 +54,7 @@ static int protothreaddetectmotion(struct pt *pt){
     PT_WAIT_UNTIL(pt, (motiondetected));
     movement_detection();
     PT_WAIT_UNTIL(pt, (motiondetected && (millis()- lastTimeread > interval)));
-    Serial.println("Motion has stopped");
+    ets_printf("Motion has stopped\n ");
     digitalWrite(red, LOW);
     digitalWrite(green,HIGH);
     motiondetected = false;
@@ -61,6 +62,20 @@ static int protothreaddetectmotion(struct pt *pt){
   PT_END(pt);
 }
 
+// fourth protothread to measure voltage 
+static int protothreadmeasurevoltage(struct pt *pt){
+  static unsigned long lastTImeread = 0; 
+  PT_BEGIN(pt);
+  while(1){
+    lastTImeread = millis();
+    PT_WAIT_UNTIL(pt, millis()- lastTImeread > intervolt);
+    float avgvolt = readvoltage();
+    double avgwatt = getWatts();
+    Serial.printf("Average voltage is %.3f, average watt is %d \n",avgvolt,avgwatt);
+    // @todo insert user code to publish to broker 
+  }
+  PT_END(pt);
+}
 
 
 // Use events to avoid blocking code
@@ -129,6 +144,7 @@ void setup()
   PT_INIT(&ptreaddht);
   PT_INIT(&ptdetectgas);
   PT_INIT(&ptdetectmotion);
+  PT_INIT(&ptreadvoltage);
 }
 
 
@@ -138,6 +154,7 @@ void loop()
   protothreadReadDHT(&ptreaddht);
   protothreaddetectgas(&ptdetectgas);
   protothreaddetectmotion(&ptdetectmotion);
+  protothreadmeasurevoltage(&ptreadvoltage);
 }
 
 

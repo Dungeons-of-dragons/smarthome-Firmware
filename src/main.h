@@ -10,6 +10,7 @@
 #include "arduino_secrets.h"
 #include "WiFi.h"
 #include "PIR/pir.h"
+#include "ACS712/acs.h"
 
 boolean user_in = false; 
 
