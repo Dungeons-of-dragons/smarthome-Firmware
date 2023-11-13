@@ -16,6 +16,7 @@ bool Gas_detected(){
   else {
     Serial.println("No Gas");
     digitalWrite (GAS_LED, LOW) ; 
+    gaspresent = false; 
     return false; 
   }
 }

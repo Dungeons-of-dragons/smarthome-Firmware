@@ -9,7 +9,7 @@
  */
 void IRAM_ATTR movement_detection()
 {
-  Serial.println("Motion detected");
+  ets_printf("Motion detected\n "); // callbacks should not have serial prints within them 
   digitalWrite(red, HIGH);
   digitalWrite(green, LOW); 
   motiondetected = true;
@@ -24,7 +24,7 @@ void motion_setup(){
   pinMode(PIR_PIN, INPUT_PULLUP);
   pinMode(red, OUTPUT);
   digitalWrite(red, LOW);
-  attachInterrupt(digitalPinToInterrupt(PIR_PIN), movement_detection, RISING);
+  attachInterrupt(digitalPinToInterrupt(PIR_PIN), movement_detection, LOW); // @bug should use rising not LOW. 
 }
 
 

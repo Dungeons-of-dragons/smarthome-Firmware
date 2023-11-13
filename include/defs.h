@@ -24,7 +24,7 @@
 #define buzzer 25
 
 
-#define PIR_PIN 16
+#define PIR_PIN 34
 
 #endif
 

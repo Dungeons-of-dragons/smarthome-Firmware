@@ -10,7 +10,6 @@ float readtemp(){
 }
 
 float readhumidity(){
-    dht.begin();
     float humidity = dht.readHumidity();
     return humidity;
 }

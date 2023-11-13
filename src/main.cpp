@@ -1,4 +1,50 @@
 #include "main.h"
+#include <pt.h> 
+
+// declare three protothreads
+static struct pt ptreaddht, ptdetectgas, pt3;
+
+
+// First protothread function to read DHT  every 5 second
+/**
+ * The function "protothreadReadDHT" reads temperature and humidity values from a sensor every 5
+ * seconds and prints them to the serial monitor.
+ * 
+ * @param pt The parameter "pt" is a pointer to a struct of type "pt". This struct is used to implement
+ * a protothread, which is a lightweight cooperative multitasking mechanism. The protothreadReadDHT
+ * function is defined to take a pointer to this struct as a parameter so that it can use it
+ */
+static int protothreadReadDHT(struct pt *pt)
+{
+  static unsigned long lastTimeread = 0;
+  PT_BEGIN(pt);
+  while(1) {
+    lastTimeread = millis();
+    PT_WAIT_UNTIL(pt, millis() - lastTimeread > 5000);
+    float temp = readtemp();
+    float humid = readhumidity(); 
+    Serial.printf("temp: %.3f, humid: %.3f\n ", temp, humid);
+  }
+  PT_END(pt);
+}
+
+
+//second protothread to check for gas presence
+static int protothreaddetectgas(struct pt *pt){
+  static unsigned long lastTimeread = 0; 
+  PT_BEGIN(pt);
+  while(1){
+    lastTimeread = millis();
+    PT_WAIT_UNTIL(pt, Gas_detected);
+    ets_printf("gas detected");
+    // insert user functions to signal the user 
+    PT_WAIT_UNTIL(pt, !Gas_detected);
+    //insert user code to notify user 
+  }
+  PT_END(pt);
+}
+
+
 
 // Use events to avoid blocking code
 /**
@@ -62,14 +108,17 @@ void setup()
   Serial.println("\nConnecting");
 
   motion_setup();
+
+  PT_INIT(&ptreaddht);
+  PT_INIT(&ptdetectgas);
 }
 
 
 
 void loop()
 {
-  float humidity = readhumidity();
-  float temperature = readtemp();
+  protothreadReadDHT(&ptreaddht);
+  protothreaddetectgas(&ptdetectgas);
 
   current_time = millis();
   if(motiondetected && (current_time - last_trigger > interval)) {
@@ -79,3 +128,5 @@ void loop()
     motiondetected = false;
   }
 }
+
+
