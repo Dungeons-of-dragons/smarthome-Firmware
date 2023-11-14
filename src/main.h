@@ -9,8 +9,8 @@
 #include "MQ2/MQ2.h"
 #include "arduino_secrets.h"
 #include "WiFi.h"
-#include "PIR/pir.h"
-#include "ACS712/acs.h"
+#include "pir.h"
+#include "acs.h"
 
 static boolean user_in = false; 
 
