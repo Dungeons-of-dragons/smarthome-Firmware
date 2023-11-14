@@ -3,6 +3,7 @@
 #include "defs.h"
 #include "WiFi.h"
 #include "PubSubClient.h"
+#include "mqtt.h"
 
 
 WiFiClient espClient;
