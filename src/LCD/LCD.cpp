@@ -17,6 +17,7 @@ class LCD{
     void displayauthorised(bool Response);
     void displaypower(double Watt, double AmpsRMS);
 };
+
 /**
  * @brief The function displays the value of temperature and humidity.
  * 
