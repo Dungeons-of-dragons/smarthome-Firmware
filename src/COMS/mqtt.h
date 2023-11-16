@@ -3,13 +3,16 @@
 
 
 //Topics to be published
-const char* Temperature = "/sensors/temperature/";
-const char* Humidity = "/sensors/humidity/";
-const char* Watts = "/sensors/watts/";
-const char* Current = "/sensors/current/";
-const char* Gas = "/sensors/gas/";
+#define Temperature "/sensors/temperature/"
+#define Humidity  "/sensors/humidity/"
+#define Watts "/sensors/watts/"
+#define Current "/sensors/current/"
+#define Gas "/sensors/gas/"
+#define Lights "/user/lights/"
 
-void mqtt_setup(); 
+const int port = 1883; //assign port number
+void mqtt_setup();
+void reconnect(); 
 void callback();
 
 #endif
