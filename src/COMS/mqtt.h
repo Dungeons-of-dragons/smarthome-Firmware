@@ -14,6 +14,6 @@ const int port = 1883; //assign port number
 void callback(char* topic, byte* payload, unsigned int length);
 void mqtt_setup();
 void reconnect(); 
-
+void callback(char* topic, byte* payload, unsigned int length);
 
 #endif

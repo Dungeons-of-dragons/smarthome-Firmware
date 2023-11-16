@@ -14,13 +14,7 @@
 
 static boolean user_in = false; 
 
-
-extern MFRC522 mfrc522;  
-extern LiquidCrystal_I2C lcd;
-
-extern char ssid[];
-extern char pass[];
-
-void displaydht(float temp, float humidity);
+char ssid[] = SECRET_SSID;
+char pass[] = SECRET_PASS; //network password saved in a secrets file 
 
 #endif
