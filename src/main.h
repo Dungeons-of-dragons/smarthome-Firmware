@@ -11,6 +11,8 @@
 #include "WiFi.h"
 #include "pir.h"
 #include "acs.h"
+#include "LCD.h"
+
 
 boolean user_in = false; 
 

@@ -5,24 +5,16 @@
 #include <SPI.h>
 #include <MFRC522.h>
 #include "door.h"
-
+#include "LCD.h"
 
 // setup
 MFRC522 mfrc522(SS_PIN, RST_PIN);  
-LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 
-void initialize() 
+void door_initialize() 
 {
   pinMode(buzzer, OUTPUT);
   pinMode(lock_pin, OUTPUT);
-  // LCD setup
-  SPI.begin(); 
-  lcd.init();
-  lcd.backlight();
-  lcd.begin(16,2);
-  lcd.clear(); 
-  lcd.print("Scan Card!");
 
   // initialize RFID card reader
   mfrc522.PCD_Init();   
@@ -78,16 +70,5 @@ void check_for_card()
   }  
 }
   
-void display_tag() {
-  lcd.begin(16,2);
-  lcd.clear();
-  lcd.setCursor(0,0);
-  lcd.print("Scan card");
-  Serial.print("UID tag :");
-  }
-  // Ask user to scan card
 
-// lcd.clear();
-// lcd.setCursor(0,0);
-// lcd. ("Scan Card");
-
+ 

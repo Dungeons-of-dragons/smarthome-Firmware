@@ -1,8 +1,10 @@
 #include "main.h"
 #include <pt.h> 
 
+LCD Lcd; // LCD instance
+
 // declare three protothreads
-static struct pt ptreaddht, ptdetectgas, ptdetectmotion, ptreadvoltage;
+static struct pt ptreaddht, ptdetectgas, ptdetectmotion, ptreadvoltage, ptdoor;
 
 
 // First protothread function to read DHT  every 5 second
@@ -77,7 +79,17 @@ static int protothreadmeasurevoltage(struct pt *pt){
   PT_END(pt);
 }
 
+//RFID/Relay protothread
+static int protothreaddoor(struct pt *pt){
+  static unsigned long lasTimeread = 0;
+  PT_BEGIN(pt);
+  while(1){
+    lasTimeread = millis();
 
+  }
+  PT_END(pt);
+
+}
 // Use events to avoid blocking code
 /**
  * The function "connected_to_ap" prints a message indicating that the device has successfully
@@ -139,7 +151,9 @@ void setup()
   WiFi.begin(ssid, pass);
   Serial.println("\nConnecting");
 
+  Lcd.lcd_initialize();
   motion_setup();
+  door_initialize();
 
   PT_INIT(&ptreaddht);
   PT_INIT(&ptdetectgas);

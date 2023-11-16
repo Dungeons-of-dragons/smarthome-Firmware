@@ -5,7 +5,7 @@
 
 #include "defs.h"
 
-void initialize();
+void door_initialize();
 void check_for_card();
 bool card_authorization();
 void display_tag();

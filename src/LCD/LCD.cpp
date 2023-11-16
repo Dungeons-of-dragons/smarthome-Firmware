@@ -1,22 +1,31 @@
 #include <LiquidCrystal_I2C.h>
 #include "defs.h"
-#include "main.h"
+#include "LCD.h"
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
+
 /**
- * @brief LCD is a class that has all possible cases of using the LCD to display information in different cases.
+ * @brief This function asks user to scan card on the RFID card reader through the LCD.
  * 
  */
-class LCD{
-    public:
-    LCD(){
-        lcd.clear();
-    }
-    void displaydht(float temp, float humidity);
-    void displayuserstate(bool userin);
-    void displayauthorised(bool Response);
-    void displaypower(double Watt, double AmpsRMS);
-};
+void LCD::display_tag() {
+  lcd.begin(16,2);
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Scan card");
+  Serial.print("UID tag :");
+}
+
+/**
+ * @brief This function initializes and sets up the LCD
+ * 
+ */
+void LCD::lcd_initialize(){
+    lcd.init();
+    lcd.backlight();
+    lcd.begin(16,2);
+    lcd.clear(); 
+}
 
 /**
  * @brief The function displays the value of temperature and humidity.
