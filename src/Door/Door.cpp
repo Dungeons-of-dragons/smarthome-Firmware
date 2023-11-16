@@ -2,10 +2,8 @@
 #include <LiquidCrystal_I2C.h>
 #include <Wire.h>
 #include <EEPROM.h>
-#include <SPI.h>
 #include <MFRC522.h>
-#include "door.h"
-#include "LCD.h"
+#include "defs.h"
 
 // setup
 MFRC522 mfrc522(SS_PIN, RST_PIN);  
@@ -39,12 +37,6 @@ bool card_authorization(){
     Serial.println("Authorised access");
     digitalWrite(buzzer, HIGH);       
     digitalWrite(lock_pin, LOW);
-    Serial.println();
-    delay(1000);  
-    digitalWrite(buzzer, HIGH);
-    delay(5000);
-    digitalWrite(lock_pin, HIGH); // if relay is closed HIGH
-    delay(2500);
     return true;
   }
   else {

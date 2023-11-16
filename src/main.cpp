@@ -79,13 +79,40 @@ static int protothreadmeasurevoltage(struct pt *pt){
   PT_END(pt);
 }
 
+static bool authorize;
 //RFID/Relay protothread
+/**
+ * @brief This protothread handles the RFID door lock and checks fro card scanned as well as give athorization
+ * and open the door.
+ * 
+ * @param pt enter the address of struct protothread as a constant
+ * @return int does not return
+ */
 static int protothreaddoor(struct pt *pt){
-  static unsigned long lasTimeread = 0;
+  static unsigned long lastTimeread = 0;
   PT_BEGIN(pt);
   while(1){
-    lasTimeread = millis();
-
+    lastTimeread = millis();
+    authorize = card_authorization();
+    Lcd.displayauthorised(authorize);
+    
+    if(authorize == true){
+      digitalWrite(buzzer, HIGH);
+      digitalWrite(lock_pin, LOW);
+      digitalWrite(green, HIGH);
+      lastTimeread = 0;
+      PT_WAIT_UNTIL(pt, millis()-lastTimeread > 1000);
+      digitalWrite(buzzer, LOW);
+      lastTimeread = 0;
+      PT_WAIT_UNTIL(pt, millis()-lastTimeread > 5000);
+      digitalWrite(lock_pin, HIGH);
+    }
+    else{
+      lastTimeread = 0;
+      digitalWrite(red, HIGH);
+      PT_WAIT_UNTIL(pt, millis()-lastTimeread > 1000);
+      digitalWrite(red, LOW);
+    }
   }
   PT_END(pt);
 
@@ -151,14 +178,18 @@ void setup()
   WiFi.begin(ssid, pass);
   Serial.println("\nConnecting");
 
+  //settiong up and initializing sensors
   Lcd.lcd_initialize();
   motion_setup();
   door_initialize();
+  door_initialize();
 
+  digitalWrite(blue, HIGH);
   PT_INIT(&ptreaddht);
   PT_INIT(&ptdetectgas);
   PT_INIT(&ptdetectmotion);
   PT_INIT(&ptreadvoltage);
+  PT_INIT(&ptdoor);
 }
 
 
@@ -169,6 +200,7 @@ void loop()
   protothreaddetectgas(&ptdetectgas);
   protothreaddetectmotion(&ptdetectmotion);
   protothreadmeasurevoltage(&ptreadvoltage);
+  protothreaddoor(&ptdoor);
 }
 
 

@@ -1,7 +1,7 @@
 #include <LiquidCrystal_I2C.h>
 #include "defs.h"
 #include "LCD.h"
-
+#include <SPI.h>
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 /**
