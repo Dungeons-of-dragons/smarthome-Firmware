@@ -1,8 +1,6 @@
 #include "main.h"
 #include <pt.h>
 
-
-
 MFRC522 mfrc522(SS_PIN, RST_PIN);  
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
@@ -22,8 +20,6 @@ static struct pt ptreaddht, ptdetectgas, ptdetectmotion, ptreadvoltage;
  * a protothread, which is a lightweight cooperative multitasking mechanism. The protothreadReadDHT
  * function is defined to take a pointer to this struct as a parameter so that it can use it
  */
-
-
 static int protothreadReadDHT(struct pt *pt)
 {
   static unsigned long lastTimeread = 0;
@@ -144,6 +140,17 @@ void got_ip_from_ap(WiFiEvent_t wifi_event, WiFiEventInfo_t wifi_info)
 }
 
 
+/**
+ * The function "displaydht" is used to display the temperature and humidity values on an LCD screen.
+ * 
+ * @param temp The "temp" parameter represents the temperature value that you want to display on the
+ * LCD screen. It should be a floating-point number.
+ * @param humidity The "humidity" parameter represents the humidity value that you want to display on
+ * the LCD screen.
+ * @attention this should be implemented as a method in a class
+ * @todo move display functions to lcd class and abstract display class or interface. 
+ * 
+ */
 void displaydht(float temp, float humidity){
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -152,11 +159,6 @@ void displaydht(float temp, float humidity){
     lcd.setCursor(0, 1); 
     lcd.println("humidity:");
     lcd.print(humidity);
-}
-
-void displayuserstate(bool userin){
-  lcd.clear();
-  lcd.setCursor(0,0);
 }
 
 void setup()

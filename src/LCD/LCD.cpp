@@ -2,7 +2,6 @@
 #include "defs.h"
 #include "main.h"
 
-LiquidCrystal_I2C lcd(0x27, 16, 2);
 /**
  * @brief LCD is a class that has all possible cases of using the LCD to display information in different cases.
  * 

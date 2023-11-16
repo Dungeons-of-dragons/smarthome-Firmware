@@ -5,10 +5,8 @@
 #include "PubSubClient.h"
 #include "mqtt.h"
 
-
 WiFiClient espClient;
 PubSubClient client(espClient);
-
 
 /**
  * @brief This function is executed when a message is received for subscribed topic.
