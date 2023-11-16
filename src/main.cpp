@@ -9,7 +9,7 @@ static struct pt ptreaddht, ptdetectgas, ptdetectmotion, ptreadvoltage, ptdoor;
 
 // First protothread function to read DHT  every 5 second
 /**
- * The function "protothreadReadDHT" reads temperature and humidity values from a sensor every 5
+ * @brief  function "protothreadReadDHT" reads temperature and humidity values from a sensor every 5
  * seconds and prints them to the serial monitor.
  * 
  * @param pt The parameter "pt" is a pointer to a struct of type "pt". This struct is used to implement
@@ -81,13 +81,6 @@ static int protothreadmeasurevoltage(struct pt *pt){
 
 static bool authorize;
 //RFID/Relay protothread
-/**
- * @brief This protothread handles the RFID door lock and checks fro card scanned as well as give athorization
- * and open the door.
- * 
- * @param pt enter the address of struct protothread as a constant
- * @return int does not return
- */
 static int protothreaddoor(struct pt *pt){
   static unsigned long lastTimeread = 0;
   PT_BEGIN(pt);
@@ -119,7 +112,7 @@ static int protothreaddoor(struct pt *pt){
 }
 // Use events to avoid blocking code
 /**
- * The function "connected_to_ap" prints a message indicating that the device has successfully
+ * @brief The function "connected_to_ap" prints a message indicating that the device has successfully
  * connected to a WiFi network.
  *
  * @param wifi_event The wifi_event parameter is of type WiFiEvent_t, which is an enumeration that
@@ -137,7 +130,7 @@ void connected_to_ap(WiFiEvent_t wifi_event, WiFiEventInfo_t wifi_info)
 
 // Handle disconnection
 /**
- * The function handles the event of being disconnected from a WiFi access point and attempts to
+ * @brief The function handles the event of being disconnected from a WiFi access point and attempts to
  * reconnect.
  *
  * @param wifi_event The wifi_event parameter is of type WiFiEvent_t, which is an enumeration that
@@ -154,7 +147,7 @@ void disconnected_from_ap(WiFiEvent_t wifi_event, WiFiEventInfo_t wifi_info)
 }
 
 /**
- * prints the local IP address of the ESP32 when it successfully connects to an access point.
+ * @brief prints the local IP address of the ESP32 when it successfully connects to an access point.
  *
  * @param wifi_event
  * @param wifi_info
@@ -191,8 +184,6 @@ void setup()
   PT_INIT(&ptreadvoltage);
   PT_INIT(&ptdoor);
 }
-
-
 
 void loop()
 {
