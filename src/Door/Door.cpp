@@ -45,10 +45,7 @@ bool card_authorization(){
   {
     //access granted
     Serial.println("Authorised access");
-    digitalWrite(buzzer, HIGH);    
-    lcd.clear();
-    lcd.setCursor(0,0);
-    lcd.println("Authorised access");    
+    digitalWrite(buzzer, HIGH);       
     digitalWrite(lock_pin, LOW);
     Serial.println();
     delay(1000);  
@@ -60,13 +57,11 @@ bool card_authorization(){
   }
   else {
     Serial.println(" Access denied");
-    lcd.clear();
-    lcd.setCursor(0,0);
-    lcd.println("Access denied");
     digitalWrite(lock_pin, LOW); // if relay is open LOW
     delay(1000);  
     return false;  
   }
+  
 }
 
 void check_for_card() 
