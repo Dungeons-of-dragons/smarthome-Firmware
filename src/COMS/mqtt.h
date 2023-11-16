@@ -13,6 +13,6 @@
 const int port = 1883; //assign port number
 void mqtt_setup();
 void reconnect(); 
-void callback();
+void callback(char* topic, byte* payload, unsigned int length);
 
 #endif
