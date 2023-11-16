@@ -14,7 +14,6 @@
 
 boolean user_in = false; 
 
-
 char ssid[] = SECRET_SSID;
 char pass[] = SECRET_PASS; //network password saved in a secrets file 
 
