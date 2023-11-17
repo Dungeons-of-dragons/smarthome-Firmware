@@ -1,17 +1,16 @@
 #include "main.h"
-#include <pt.h> 
+#include <pt.h>
 
 LCD Lcd; // LCD instance
 
 // declare three protothreads
 static struct pt ptreaddht, ptdetectgas, ptdetectmotion, ptreadvoltage, ptdoor;
 
-
 // First protothread function to read DHT  every 5 second
 /**
  * @brief  function "protothreadReadDHT" reads temperature and humidity values from a sensor every 5
  * seconds and prints them to the serial monitor.
- * 
+ *
  * @param pt The parameter "pt" is a pointer to a struct of type "pt". This struct is used to implement
  * a protothread, which is a lightweight cooperative multitasking mechanism. The protothreadReadDHT
  * function is defined to take a pointer to this struct as a parameter so that it can use it
@@ -20,95 +19,106 @@ static int protothreadReadDHT(struct pt *pt)
 {
   static unsigned long lastTimeread = 0;
   PT_BEGIN(pt);
-  while(1) {
+  while (1)
+  {
     lastTimeread = millis();
     PT_WAIT_UNTIL(pt, millis() - lastTimeread > interval);
     float temp = readtemp();
-    float humid = readhumidity(); 
+    float humid = readhumidity();
     Serial.printf("temp: %.3f, humid: %.3f\n", temp, humid);
-    //@todo insert user code to publish topics 
+    //@todo insert user code to publish topics
   }
   PT_END(pt);
 }
 
-
-//second protothread to check for gas presence
-static int protothreaddetectgas(struct pt *pt){
-  static unsigned long lastTimeread = 0; 
+// second protothread to check for gas presence
+static int protothreaddetectgas(struct pt *pt)
+{
+  static unsigned long lastTimeread = 0;
   PT_BEGIN(pt);
-  while(1){
+  while (1)
+  {
     lastTimeread = millis();
     PT_WAIT_UNTIL(pt, Gas_detected);
     ets_printf("gas detected");
-    //@todo insert user functions to signal the user 
+    //@todo insert user functions to signal the user
     PT_WAIT_UNTIL(pt, !Gas_detected);
-    //@todo insert user code to notify user 
+    //@todo insert user code to notify user
   }
   PT_END(pt);
 }
 
-//third protothread to detect motion 
-static int protothreaddetectmotion(struct pt *pt){
-  static unsigned long lastTimeread =0;
+// third protothread to detect motion
+static int protothreaddetectmotion(struct pt *pt)
+{
+  static unsigned long lastTimeread = 0;
   PT_BEGIN(pt);
-  while(1){
+  while (1)
+  {
     lastTimeread = millis();
     PT_WAIT_UNTIL(pt, (motiondetected));
     movement_detection();
-    PT_WAIT_UNTIL(pt, (motiondetected && (millis()- lastTimeread > interval)));
+    PT_WAIT_UNTIL(pt, (motiondetected && (millis() - lastTimeread > interval)));
     ets_printf("Motion has stopped\n ");
     digitalWrite(red, LOW);
-    digitalWrite(green,HIGH);
+    digitalWrite(green, HIGH);
     motiondetected = false;
   }
   PT_END(pt);
 }
 
-// fourth protothread to measure voltage 
-static int protothreadmeasurevoltage(struct pt *pt){
-  static unsigned long lastTImeread = 0; 
+// fourth protothread to measure voltage
+static int protothreadmeasurevoltage(struct pt *pt)
+{
+  static unsigned long lastTImeread = 0;
   PT_BEGIN(pt);
-  while(1){
+  while (1)
+  {
     lastTImeread = millis();
-    PT_WAIT_UNTIL(pt, millis()- lastTImeread > intervolt);
+    PT_WAIT_UNTIL(pt, millis() - lastTImeread > intervolt);
     float avgvolt = readvoltage();
     double avgwatt = getWatts();
-    Serial.printf("Average voltage is %.3f, average watt is %d \n",avgvolt,avgwatt);
-    // @todo insert user code to publish to broker 
+    Serial.printf("Average voltage is %.3f, average watt is %d \n", avgvolt, avgwatt);
+    // @todo insert user code to publish to broker
   }
   PT_END(pt);
 }
 
 static bool authorize;
-//RFID/Relay protothread
-static int protothreaddoor(struct pt *pt){
+// RFID/Relay protothread
+static int protothreaddoor(struct pt *pt)
+{
   static unsigned long lastTimeread = 0;
   PT_BEGIN(pt);
-  while(1){
+
+  while (1)
+  {
     lastTimeread = millis();
+    check_for_card();
     authorize = card_authorization();
     Lcd.displayauthorised(authorize);
-    
-    if(authorize == true){
+
+    if (authorize == true)
+    {
       digitalWrite(buzzer, HIGH);
       digitalWrite(lock_pin, LOW);
       digitalWrite(green, HIGH);
       lastTimeread = 0;
-      PT_WAIT_UNTIL(pt, millis()-lastTimeread > 1000);
+      PT_WAIT_UNTIL(pt, millis() - lastTimeread > 1000);
       digitalWrite(buzzer, LOW);
       lastTimeread = 0;
-      PT_WAIT_UNTIL(pt, millis()-lastTimeread > 5000);
+      PT_WAIT_UNTIL(pt, millis() - lastTimeread > 5000);
       digitalWrite(lock_pin, HIGH);
     }
-    else{
+    else
+    {
       lastTimeread = 0;
       digitalWrite(red, HIGH);
-      PT_WAIT_UNTIL(pt, millis()-lastTimeread > 1000);
+      PT_WAIT_UNTIL(pt, millis() - lastTimeread > 1000);
       digitalWrite(red, LOW);
     }
   }
   PT_END(pt);
-
 }
 // Use events to avoid blocking code
 /**
@@ -159,7 +169,6 @@ void got_ip_from_ap(WiFiEvent_t wifi_event, WiFiEventInfo_t wifi_info)
   Serial.println(WiFi.localIP());
 }
 
-
 void setup()
 {
   Serial.begin(115200);
@@ -171,7 +180,7 @@ void setup()
   WiFi.begin(ssid, pass);
   Serial.println("\nConnecting");
 
-  //settiong up and initializing sensors
+  // settiong up and initializing sensors
   Lcd.lcd_initialize();
   motion_setup();
   door_initialize();
@@ -193,5 +202,3 @@ void loop()
   protothreadmeasurevoltage(&ptreadvoltage);
   protothreaddoor(&ptdoor);
 }
-
-
