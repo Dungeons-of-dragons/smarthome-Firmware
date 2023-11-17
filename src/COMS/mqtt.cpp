@@ -13,8 +13,21 @@
  * @param length length of data received
  */
 void callback(char* topic, byte* payload, unsigned int length){
-    for (int i = 0; i < length; i++){
-        Serial.println((char)payload[i]);
+   String message = "";
+    for (int i = 0; i < length; i++) {
+        message += (char)payload[i];
+    }
+
+    // Check if the topic is the LED topic
+    if (strcmp(topic, Lights) == 0) {
+        // Process the LED command
+        if (message == "ON") {
+            // Turn on the LED
+            digitalWrite(blue, HIGH);
+        } else if (message == "OFF") {
+            // Turn off the LED
+            digitalWrite(blue, LOW);
+        }
     }
 }
 

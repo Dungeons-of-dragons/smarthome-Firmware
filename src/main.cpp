@@ -116,7 +116,6 @@ static int protothreaddoor(struct pt *pt)
     {
       digitalWrite(buzzer, HIGH);
       digitalWrite(lock_pin, LOW);
-      digitalWrite(green, HIGH);
       lastTimeread = millis();
       PT_WAIT_UNTIL(pt, millis() - lastTimeread > 1000);
       digitalWrite(buzzer, LOW);
@@ -127,17 +126,13 @@ static int protothreaddoor(struct pt *pt)
     else
     {
       lastTimeread = 0;
-      digitalWrite(red, HIGH);
       PT_WAIT_UNTIL(pt, millis() - lastTimeread > 1000);
-      digitalWrite(red, LOW);
     }
   }
   PT_END(pt);
 }
 
-static int protothreadLights(struct pt *pt){
-  
-}
+
 // Use events to avoid blocking code
 /**
  * @brief The function "connected_to_ap" prints a message indicating that the device has successfully
