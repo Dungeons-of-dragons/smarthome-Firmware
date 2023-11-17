@@ -3,13 +3,7 @@
 #include "WiFi.h"
 #include "arduino_secrets.h"
 #include "defs.h"
-#include "PubSubClient.h"
 #include "mqtt.h"
-
-
-WiFiClient espClient;
-PubSubClient client(espClient);
-
 
 /**
  * @brief This function is executed when a message is received for subscribed topic.
@@ -25,7 +19,7 @@ void callback(char* topic, byte* payload, unsigned int length){
 }
 
 /**
- * @brief This funcion sets up the client server
+ * @brief This function sets up the client server
  * 
  */
 void mqtt_setup(){
@@ -37,6 +31,9 @@ void mqtt_setup(){
 /**
  * @brief This function checks if client and server is connected and reconnects if necessary.
  * and subscribe to any ncessary topics.
+ * 
+ * @param mqttUser This is the name of the mqtt user
+ * @param mqttPassword THis holds the password of the user.
  */
 void reconnect(char *mqttUser, char* mqttPassword){
     while(!client.connected()){

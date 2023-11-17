@@ -12,6 +12,7 @@
 #include "pir.h"
 #include "acs.h"
 #include "LCD.h"
+#include "mqtt.h"
 
 
 boolean user_in = false; 

@@ -1,5 +1,6 @@
 #include "main.h"
 #include <pt.h>
+#include <string.h>
 
 LCD Lcd; // LCD instance
 
@@ -7,6 +8,8 @@ LCD Lcd; // LCD instance
 static struct pt ptreaddht, ptdetectgas, ptdetectmotion, ptreadvoltage, ptdoor;
 
 // First protothread function to read DHT  every 5 second
+static float temp;
+static float humid;
 /**
  * @brief  function "protothreadReadDHT" reads temperature and humidity values from a sensor every 5
  * seconds and prints them to the serial monitor.
@@ -23,10 +26,12 @@ static int protothreadReadDHT(struct pt *pt)
   {
     lastTimeread = millis();
     PT_WAIT_UNTIL(pt, millis() - lastTimeread > interval);
-    float temp = readtemp();
-    float humid = readhumidity();
+    temp = readtemp();
+    humid = readhumidity();
     Serial.printf("temp: %.3f, humid: %.3f\n", temp, humid);
     //@todo insert user code to publish topics
+    client.publish(Temperature, String(temp).c_str());
+    client.publish(Humidity, String(humid).c_str());
   }
   PT_END(pt);
 }
@@ -41,9 +46,11 @@ static int protothreaddetectgas(struct pt *pt)
     lastTimeread = millis();
     PT_WAIT_UNTIL(pt, Gas_detected);
     ets_printf("gas detected");
+    client.publish(Gas, String(1).c_str());
     //@todo insert user functions to signal the user
     PT_WAIT_UNTIL(pt, !Gas_detected);
-    //@todo insert user code to notify user
+    //@todo insert user code to notify )
+    client.publish(Gas, String(0).c_str());
   }
   PT_END(pt);
 }
@@ -58,16 +65,20 @@ static int protothreaddetectmotion(struct pt *pt)
     lastTimeread = millis();
     PT_WAIT_UNTIL(pt, (motiondetected));
     movement_detection();
+    client.publish(PIR, String(1).c_str());
     PT_WAIT_UNTIL(pt, (motiondetected && (millis() - lastTimeread > interval)));
     ets_printf("Motion has stopped\n ");
     digitalWrite(red, LOW);
     digitalWrite(green, HIGH);
     motiondetected = false;
+    client.publish(PIR, String(0).c_str());
   }
   PT_END(pt);
 }
 
 // fourth protothread to measure voltage
+float avgvolt;
+double avgwatt;
 static int protothreadmeasurevoltage(struct pt *pt)
 {
   static unsigned long lastTImeread = 0;
@@ -75,11 +86,14 @@ static int protothreadmeasurevoltage(struct pt *pt)
   while (1)
   {
     lastTImeread = millis();
-    PT_WAIT_UNTIL(pt, millis() - lastTImeread > intervolt);
-    float avgvolt = readvoltage();
-    double avgwatt = getWatts();
+    PT_WAIT_UNTIL(pt, millis() - lastTImeread > interval);
+    avgvolt = readvoltage();
+    avgwatt = getWatts();
+
     Serial.printf("Average voltage is %.3f, average watt is %d \n", avgvolt, avgwatt);
     // @todo insert user code to publish to broker
+    client.publish(Volt, String(avgvolt).c_str());
+    client.publish(Watts, String(avgwatt).c_str());
   }
   PT_END(pt);
 }
@@ -103,10 +117,10 @@ static int protothreaddoor(struct pt *pt)
       digitalWrite(buzzer, HIGH);
       digitalWrite(lock_pin, LOW);
       digitalWrite(green, HIGH);
-      lastTimeread = 0;
+      lastTimeread = millis();
       PT_WAIT_UNTIL(pt, millis() - lastTimeread > 1000);
       digitalWrite(buzzer, LOW);
-      lastTimeread = 0;
+      lastTimeread = millis();
       PT_WAIT_UNTIL(pt, millis() - lastTimeread > 5000);
       digitalWrite(lock_pin, HIGH);
     }
@@ -119,6 +133,10 @@ static int protothreaddoor(struct pt *pt)
     }
   }
   PT_END(pt);
+}
+
+static int protothreadLights(struct pt *pt){
+  
 }
 // Use events to avoid blocking code
 /**
@@ -173,14 +191,17 @@ void setup()
 {
   Serial.begin(115200);
   delay(1000);
-
+  // Setting up WiFi connection
   WiFi.onEvent(connected_to_ap, ARDUINO_EVENT_WIFI_STA_CONNECTED);
   WiFi.onEvent(got_ip_from_ap, ARDUINO_EVENT_WIFI_STA_GOT_IP);
   WiFi.onEvent(disconnected_from_ap, ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
   WiFi.begin(ssid, pass);
   Serial.println("\nConnecting");
 
-  // settiong up and initializing sensors
+  //Setting up MQTT
+  mqtt_setup();
+
+  // setting up and initializing sensors
   Lcd.lcd_initialize();
   motion_setup();
   door_initialize();
@@ -196,9 +217,14 @@ void setup()
 
 void loop()
 {
+  //Getting sensor readings and implementing necesarry actions regarding them
   protothreadReadDHT(&ptreaddht);
   protothreaddetectgas(&ptdetectgas);
   protothreaddetectmotion(&ptdetectmotion);
   protothreadmeasurevoltage(&ptreadvoltage);
   protothreaddoor(&ptdoor);
+
+  //connect MQTT client
+  reconnect(MQTT_USER, MQTT_PASS);
+
 }
