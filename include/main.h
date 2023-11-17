@@ -4,15 +4,15 @@
 
 #include <Arduino.h>
 #include "defs.h"
-#include "dht11.h"
-#include "door.h"
-#include "MQ2.h"
+#include "DHT11/dht11.h"
+#include "Door/door.h"
+#include "MQ2/MQ2.h"
 #include "arduino_secrets.h"
-#include "WiFi.h"
-#include "pir.h"
-#include "acs.h"
-#include "LCD.h"
-#include "mqtt.h"
+#include <WiFi.h>
+#include "PIR/pir.h"
+#include "ACS712/acs.h"
+#include "LCD/LCD.h"
+#include "COMS/mqtt.h"
 
 
 boolean user_in = false; 

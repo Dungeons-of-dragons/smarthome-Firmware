@@ -15,8 +15,8 @@
 //Topics to be subscribed into
 #define Lights "/user/lights/"
 
-WiFiClient espClient;
-PubSubClient client(espClient);
+extern WiFiClient espClient;
+extern PubSubClient client;
 
 const int port = 1883; //assign port number
 void mqtt_setup();
