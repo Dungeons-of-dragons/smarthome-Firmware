@@ -200,9 +200,7 @@ void setup()
   Lcd.lcd_initialize();
   motion_setup();
   door_initialize();
-  door_initialize();
 
-  digitalWrite(blue, HIGH);
   PT_INIT(&ptreaddht);
   PT_INIT(&ptdetectgas);
   PT_INIT(&ptdetectmotion);
