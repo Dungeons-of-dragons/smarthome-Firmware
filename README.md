@@ -11,7 +11,8 @@ The arduino_secrets.h library is a library that holds sensitive information. Its
 
 To setup your arduino_secrets.h file, create an 'arduino_secrets.h' file under the include directory. Populate the file with the following content:
 
-```#ifndef ARDUINO_SECRETS_H
+``` C
+#ifndef ARDUINO_SECRETS_H
 #define ARDUINO_SECRETS_H
 
 #define SECRET_SSID "" //enter your wifi SSID
@@ -20,4 +21,5 @@ To setup your arduino_secrets.h file, create an 'arduino_secrets.h' file under t
 #define MQTT_USER "" // enter user name
 #define MQTT_PASS "" // enter mqtt password
 
-#endif```
+#endif
+```
