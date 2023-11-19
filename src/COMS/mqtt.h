@@ -18,9 +18,9 @@
 extern WiFiClient espClient;
 extern PubSubClient client;
 
-const int port = 1883; //assign port number
+const int port = 1885; //assign port number
 void mqtt_setup();
-void reconnect(char *mqttUser, char* mqttPassword); 
+void reconnect(const char *mqttUser, const char* mqttPassword); 
 void callback(char* topic, byte* payload, unsigned int length);
 
 #endif

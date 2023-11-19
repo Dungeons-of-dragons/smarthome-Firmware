@@ -51,7 +51,7 @@ void mqtt_setup(){
  * @param mqttUser This is the name of the mqtt user
  * @param mqttPassword THis holds the password of the user.
  */
-void reconnect(char *mqttUser, char* mqttPassword){
+void reconnect(const char *mqttUser, const char* mqttPassword){
     while(!client.connected()){
     Serial.println("MQTT not connected ... trying to connect");
 
