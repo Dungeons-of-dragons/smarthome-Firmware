@@ -27,6 +27,8 @@ void LCD::lcd_initialize()
     lcd.backlight();
     lcd.begin(16, 2);
     lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Welcome to D.O.D");
 }
 
 /**
