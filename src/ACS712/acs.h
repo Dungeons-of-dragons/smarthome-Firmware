@@ -1,7 +1,7 @@
 #ifndef ACS_H
 #define ACS_H 
 
-static const long intervolt = 2500;
+static const long intervolt = 10000;
 static int mVperAmp = 185;           // this the 5A version of the ACS712 -use 100 for 20A Module and 66 for 30A Module
 static int Watt = 0;
 static double Voltage = 0;
