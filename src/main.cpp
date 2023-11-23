@@ -5,7 +5,7 @@
 LCD Lcd; // LCD instance
 
 // declare three protothreads
-static struct pt ptreaddht, ptdetectgas, ptdetectmotion, ptreadvoltage, ptdoor;
+static struct pt ptreaddht, ptdetectgas, ptdetectmotion, ptreadvoltage, ptdoor, ptmqtt;
 
 // First protothread function to read DHT  every 5 second
 static float temp;
@@ -29,9 +29,11 @@ static int protothreadReadDHT(struct pt *pt)
     temp = readtemp();
     humid = readhumidity();
     Serial.printf("temp: %.3f, humid: %.3f\n", temp, humid);
+    Lcd.displaydht(temp, humid);
     //@todo insert user code to publish topics
     client.publish(Temperature, String(temp).c_str());
     client.publish(Humidity, String(humid).c_str());
+    PT_YIELD(pt);
   }
   PT_END(pt);
 }
@@ -86,52 +88,105 @@ static int protothreadmeasurevoltage(struct pt *pt)
   while (1)
   {
     lastTImeread = millis();
-    PT_WAIT_UNTIL(pt, millis() - lastTImeread > interval);
+    PT_WAIT_UNTIL(pt, millis() - lastTImeread > intervolt);
     avgvolt = readvoltage();
     avgwatt = getWatts();
 
     Serial.printf("Average voltage is %.3f, average watt is %d \n", avgvolt, avgwatt);
+    Lcd.displaypower(avgwatt, avgvolt);
     // @todo insert user code to publish to broker
     client.publish(Volt, String(avgvolt).c_str());
     client.publish(Watts, String(avgwatt).c_str());
+    PT_YIELD(pt);
   }
   PT_END(pt);
 }
 
+static int protothreadmqtt(struct pt *pt)
+{
+  static unsigned long lastTImeread = 0;
+  PT_BEGIN(pt);
+  while (1)
+  {
+    lastTImeread = millis();
+    PT_WAIT_UNTIL(pt, millis() - lastTImeread > 15000);
+    reconnect(MQTT_USER_ARRAY, MQTT_PASS_ARRAY);
+    PT_YIELD(pt);
+  }
+  PT_END(pt);
+}
+/**
+ * @brief this protothread handles authorization of the user at the door
+ * @param pt the pointer to the pt struct 
+ * 
+ * @todo implment spawning a child process to yield control 
+ * 
+*/
+
 static bool authorize;
-// RFID/Relay protothread
-static int protothreaddoor(struct pt *pt)
+static int protothreadauth(struct pt *pt)
 {
   static unsigned long lastTimeread = 0;
   PT_BEGIN(pt);
-
   while (1)
   {
     lastTimeread = millis();
+    PT_WAIT_UNTIL(pt, millis()- lastTimeread > doorinterval);
     check_for_card();
-    authorize = card_authorization();
+    authorize = card_authorization;
+    PT_WAIT_UNTIL(pt, authorize== true);
+    digitalWrite(buzzer, HIGH);
+    digitalWrite(lock_pin, LOW);
+    lastTimeread = millis();
+    PT_WAIT_UNTIL(pt, millis()- lastTimeread > 1000);
+    digitalWrite(buzzer, LOW);
+    lastTimeread = millis();
     Lcd.displayauthorised(authorize);
+    PT_WAIT_UNTIL(pt, millis() - lastTimeread > 5000);
+    authorize = card_authorization; 
+    PT_WAIT_UNTIL(pt, authorize == false);
 
-    if (authorize == true)
-    {
-      digitalWrite(buzzer, HIGH);
-      digitalWrite(lock_pin, LOW);
-      lastTimeread = millis();
-      PT_WAIT_UNTIL(pt, millis() - lastTimeread > 1000);
-      digitalWrite(buzzer, LOW);
-      lastTimeread = millis();
-      PT_WAIT_UNTIL(pt, millis() - lastTimeread > 5000);
-      digitalWrite(lock_pin, HIGH);
-    }
-    else
-    {
-      lastTimeread = 0;
-      PT_WAIT_UNTIL(pt, millis() - lastTimeread > 1000);
-    }
+
+    
+
   }
   PT_END(pt);
 }
 
+
+// RFID/Relay protothread
+// static int protothreaddoor(struct pt *pt)
+// {
+//   static unsigned long lastTimeread = 0;
+//   PT_BEGIN(pt);
+
+//   while (1)
+//   {
+//     lastTimeread = millis();
+//     check_for_card();
+//     authorize = card_authorization();
+
+//     if (authorize == true)
+//     {
+//       digitalWrite(buzzer, HIGH);
+//       digitalWrite(lock_pin, LOW);
+//       lastTimeread = millis();
+//       PT_WAIT_UNTIL(pt, millis() - lastTimeread > 1000);
+//       digitalWrite(buzzer, LOW);
+//       lastTimeread = millis();
+//       PT_WAIT_UNTIL(pt, millis() - lastTimeread > 5000);
+//       digitalWrite(lock_pin, HIGH);
+//       Lcd.displayauthorised(authorize);
+//     }
+//     else
+//     {
+//       lastTimeread = 0;
+//       PT_WAIT_UNTIL(pt, millis() - lastTimeread > 1000);
+//       Lcd.displayauthorised(authorize);
+//     }
+//   }
+//   PT_END(pt);
+// }
 
 // Use events to avoid blocking code
 /**
@@ -193,7 +248,7 @@ void setup()
   WiFi.begin(ssid, pass);
   Serial.println("\nConnecting");
 
-  //Setting up MQTT
+  // Setting up MQTT
   mqtt_setup();
 
   // setting up and initializing sensors
@@ -205,19 +260,17 @@ void setup()
   PT_INIT(&ptdetectgas);
   PT_INIT(&ptdetectmotion);
   PT_INIT(&ptreadvoltage);
-  PT_INIT(&ptdoor);
+  // PT_INIT(&ptdoor);
+  PT_INIT(&ptmqtt);
 }
 
 void loop()
 {
-  //Getting sensor readings and implementing necesarry actions regarding them
+  // Getting sensor readings and implementing necesarry actions regarding them
   protothreadReadDHT(&ptreaddht);
   protothreaddetectgas(&ptdetectgas);
   protothreaddetectmotion(&ptdetectmotion);
   protothreadmeasurevoltage(&ptreadvoltage);
-  protothreaddoor(&ptdoor);
-
-  //connect MQTT client
-  reconnect(MQTT_USER, MQTT_PASS);
-
+  protothreadmqtt(&ptmqtt);
+  // protothreaddoor(&ptdoor);
 }
