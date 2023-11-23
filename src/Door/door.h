@@ -10,5 +10,7 @@ void check_for_card();
 bool card_authorization();
 void display_tag();
 
+#define doorinterval 22000
+
 #endif
 
