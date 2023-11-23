@@ -8,8 +8,7 @@
 //pinout definitions 
 #define DHT11PIN 16
 #define MQ2_INPUT 2
-#define GAS_LED 18
-#define CURRENT_PIN 34
+#define CURRENT_PIN 18
 
 // RFID card reader pins
 #define SS_PIN 21
@@ -20,12 +19,9 @@
 #define blue 14
 #define green 12
 
-
 #define lock_pin 33
 #define buzzer 25
-
 
 #define PIR_PIN 32
 
 #endif
-
