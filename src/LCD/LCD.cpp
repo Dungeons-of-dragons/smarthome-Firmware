@@ -97,6 +97,7 @@ void LCD::displaypower(double Watt, double AmpsRMS)
     lcd.setCursor(0, 0);
     lcd.println("Power used: ");
     lcd.print(Watt);
+    lcd.setCursor(0, 1);
     lcd.println("Current Drawn: ");
     lcd.print(AmpsRMS);
 }
