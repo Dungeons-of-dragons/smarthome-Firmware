@@ -6,7 +6,7 @@
 // #define AUTHORIZED_CARDS ""
 
 //pinout definitions 
-#define DHT11PIN 16
+#define DHT11PIN 26
 #define MQ2_INPUT 2
 #define CURRENT_PIN 18
 
@@ -20,7 +20,7 @@
 #define green 12
 
 #define lock_pin 33
-#define buzzer 25
+#define buzzer 27
 
 #define PIR_PIN 32
 
