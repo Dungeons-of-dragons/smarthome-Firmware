@@ -13,6 +13,7 @@
 #include "ACS712/acs.h"
 #include "LCD/LCD.h"
 #include "COMS/mqtt.h"
+#include "COMS/influx.h"
 
 
 boolean user_in = false; 

@@ -4,12 +4,16 @@
 
 LCD Lcd; // LCD instance
 
+InfluxDBClient client(INFLUXDB_URL, INFLUXDB_ORG, INFLUXDB_BUCKET, INFLUXDB_TOKEN, InfluxDbCloud2CACert);
+
+Point sensor("dht11");
 // declare three protothreads
 static struct pt ptreaddht, ptdetectgas, ptdetectmotion, ptreadvoltage, ptdoor, ptmqtt;
 
-// First protothread function to read DHT  every 5 second
 static float temp;
 static float humid;
+
+// First protothread function to read DHT  every 5 second
 /**
  * @brief  function "protothreadReadDHT" reads temperature and humidity values from a sensor every 5
  * seconds and prints them to the serial monitor.
@@ -31,8 +35,9 @@ static int protothreadReadDHT(struct pt *pt)
     Serial.printf("temp: %.3f, humid: %.3f\n", temp, humid);
     Lcd.displaydht(temp, humid);
     //@todo insert user code to publish topics
-    client.publish(Temperature, String(temp).c_str());
-    client.publish(Humidity, String(humid).c_str());
+    sensor.clearFields();
+    sensor.addField("temperature", temp);
+    sensor.addField("humidity", humid); 
     PT_YIELD(pt);
   }
   PT_END(pt);
@@ -48,11 +53,9 @@ static int protothreaddetectgas(struct pt *pt)
     lastTimeread = millis();
     PT_WAIT_UNTIL(pt, Gas_detected);
     ets_printf("gas detected");
-    client.publish(Gas, String(1).c_str());
     //@todo insert user functions to signal the user
     PT_WAIT_UNTIL(pt, !Gas_detected);
     //@todo insert user code to notify )
-    client.publish(Gas, String(0).c_str());
   }
   PT_END(pt);
 }
@@ -67,13 +70,11 @@ static int protothreaddetectmotion(struct pt *pt)
     lastTimeread = millis();
     PT_WAIT_UNTIL(pt, (motiondetected));
     movement_detection();
-    client.publish(PIR, String(1).c_str());
     PT_WAIT_UNTIL(pt, (motiondetected && (millis() - lastTimeread > interval)));
     ets_printf("Motion has stopped\n ");
     digitalWrite(red, LOW);
     digitalWrite(green, HIGH);
     motiondetected = false;
-    client.publish(PIR, String(0).c_str());
   }
   PT_END(pt);
 }
@@ -95,26 +96,12 @@ static int protothreadmeasurevoltage(struct pt *pt)
     Serial.printf("Average voltage is %.3f, average watt is %d \n", avgvolt, avgwatt);
     Lcd.displaypower(avgwatt, avgvolt);
     // @todo insert user code to publish to broker
-    client.publish(Volt, String(avgvolt).c_str());
-    client.publish(Watts, String(avgwatt).c_str());
     PT_YIELD(pt);
   }
   PT_END(pt);
 }
 
-static int protothreadmqtt(struct pt *pt)
-{
-  static unsigned long lastTImeread = 0;
-  PT_BEGIN(pt);
-  while (1)
-  {
-    lastTImeread = millis();
-    PT_WAIT_UNTIL(pt, millis() - lastTImeread > 15000);
-    reconnect(MQTT_USER_ARRAY, MQTT_PASS_ARRAY);
-    PT_YIELD(pt);
-  }
-  PT_END(pt);
-}
+
 /**
  * @brief this protothread handles authorization of the user at the door
  * @param pt the pointer to the pt struct 
@@ -122,7 +109,6 @@ static int protothreadmqtt(struct pt *pt)
  * @todo implment spawning a child process to yield control 
  * 
 */
-
 static bool authorize;
 static int protothreadauth(struct pt *pt)
 {
@@ -255,6 +241,7 @@ void setup()
   Lcd.lcd_initialize();
   motion_setup();
   door_initialize();
+  influx_setup();
 
   PT_INIT(&ptreaddht);
   PT_INIT(&ptdetectgas);
@@ -262,6 +249,7 @@ void setup()
   PT_INIT(&ptreadvoltage);
   // PT_INIT(&ptdoor);
   PT_INIT(&ptmqtt);
+
 }
 
 void loop()
@@ -271,6 +259,5 @@ void loop()
   protothreaddetectgas(&ptdetectgas);
   protothreaddetectmotion(&ptdetectmotion);
   protothreadmeasurevoltage(&ptreadvoltage);
-  protothreadmqtt(&ptmqtt);
   // protothreaddoor(&ptdoor);
 }
