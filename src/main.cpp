@@ -4,11 +4,11 @@
 
 LCD Lcd; // LCD instance
 
-InfluxDBClient client(INFLUXDB_URL, INFLUXDB_ORG, INFLUXDB_BUCKET, INFLUXDB_TOKEN, InfluxDbCloud2CACert);
+InfluxDBClient Client(INFLUXDB_URL, INFLUXDB_ORG, INFLUXDB_BUCKET, INFLUXDB_TOKEN, InfluxDbCloud2CACert);
 
 Point sensor("dht11");
 // declare three protothreads
-static struct pt ptreaddht, ptdetectgas, ptdetectmotion, ptreadvoltage, ptdoor, ptmqtt;
+static struct pt ptreaddht, ptdetectgas, ptdetectmotion, ptreadvoltage, ptdoor, ptmqtt, ptreconnect;
 
 static float temp;
 static float humid;
@@ -37,7 +37,7 @@ static int protothreadReadDHT(struct pt *pt)
     //@todo insert user code to publish topics
     sensor.clearFields();
     sensor.addField("temperature", temp);
-    sensor.addField("humidity", humid); 
+    sensor.addField("humidity", humid);
     PT_YIELD(pt);
   }
   PT_END(pt);
@@ -101,14 +101,13 @@ static int protothreadmeasurevoltage(struct pt *pt)
   PT_END(pt);
 }
 
-
 /**
  * @brief this protothread handles authorization of the user at the door
- * @param pt the pointer to the pt struct 
- * 
- * @todo implment spawning a child process to yield control 
- * 
-*/
+ * @param pt the pointer to the pt struct
+ *
+ * @todo implment spawning a child process to yield control
+ *
+ */
 static bool authorize;
 static int protothreadauth(struct pt *pt)
 {
@@ -117,28 +116,39 @@ static int protothreadauth(struct pt *pt)
   while (1)
   {
     lastTimeread = millis();
-    PT_WAIT_UNTIL(pt, millis()- lastTimeread > doorinterval);
+    PT_WAIT_UNTIL(pt, millis() - lastTimeread > doorinterval);
     check_for_card();
     authorize = card_authorization;
-    PT_WAIT_UNTIL(pt, authorize== true);
+    PT_WAIT_UNTIL(pt, authorize == true);
     digitalWrite(buzzer, HIGH);
     digitalWrite(lock_pin, LOW);
     lastTimeread = millis();
-    PT_WAIT_UNTIL(pt, millis()- lastTimeread > 1000);
+    PT_WAIT_UNTIL(pt, millis() - lastTimeread > 1000);
     digitalWrite(buzzer, LOW);
     lastTimeread = millis();
     Lcd.displayauthorised(authorize);
     PT_WAIT_UNTIL(pt, millis() - lastTimeread > 5000);
-    authorize = card_authorization; 
+    authorize = card_authorization;
     PT_WAIT_UNTIL(pt, authorize == false);
-
-
-    
-
   }
   PT_END(pt);
 }
 
+static int protothreadreconnect(struct pt *pt)
+{
+  static unsigned long lastTimeread = 0;
+  PT_BEGIN(pt);
+  while (1)
+  {
+    lastTimeread = millis();
+    PT_WAIT_UNTIL(pt, !Client.writePoint(sensor));
+    PT_WAIT_UNTIL(pt, millis() - lastTimeread > 2000);
+    Serial.print("InfluxDB write failed: ");
+    Serial.println(Client.getLastErrorMessage());
+    PT_EXIT(pt);
+  }
+  PT_END(pt);
+}
 
 // RFID/Relay protothread
 // static int protothreaddoor(struct pt *pt)
@@ -234,9 +244,6 @@ void setup()
   WiFi.begin(ssid, pass);
   Serial.println("\nConnecting");
 
-  // Setting up MQTT
-  mqtt_setup();
-
   // setting up and initializing sensors
   Lcd.lcd_initialize();
   motion_setup();
@@ -248,8 +255,7 @@ void setup()
   PT_INIT(&ptdetectmotion);
   PT_INIT(&ptreadvoltage);
   // PT_INIT(&ptdoor);
-  PT_INIT(&ptmqtt);
-
+  PT_INIT(&ptreconnect);
 }
 
 void loop()
@@ -259,5 +265,6 @@ void loop()
   protothreaddetectgas(&ptdetectgas);
   protothreaddetectmotion(&ptdetectmotion);
   protothreadmeasurevoltage(&ptreadvoltage);
+  protothreadreconnect(&ptreconnect);
   // protothreaddoor(&ptdoor);
 }

@@ -13,7 +13,7 @@ ESP8266WiFiMulti wifiMulti;
 
 
 // Declare InfluxDB client instance with preconfigured InfluxCloud certificate
-InfluxDBClient client(INFLUXDB_URL, INFLUXDB_ORG, INFLUXDB_BUCKET, INFLUXDB_TOKEN, InfluxDbCloud2CACert);
+InfluxDBClient Client(INFLUXDB_URL, INFLUXDB_ORG, INFLUXDB_BUCKET, INFLUXDB_TOKEN, InfluxDbCloud2CACert);
 
 // Declare Data point
 Point sensor("dht11");
@@ -26,15 +26,15 @@ void influx_setup()
   timeSync(TZ_INFO, "pool.ntp.org", "time.nis.gov");
 
   // Check server connection
-  if (client.validateConnection())
+  if (Client.validateConnection())
   {
     Serial.print("Connected to InfluxDB: ");
-    Serial.println(client.getServerUrl());
+    Serial.println(Client.getServerUrl());
   }
   else
   {
     Serial.print("InfluxDB connection failed: ");
-    Serial.println(client.getLastErrorMessage());
+    Serial.println(Client.getLastErrorMessage());
 
     sensor.addTag("device", DEVICE);
     sensor.addTag("SSID", WiFi.SSID());
@@ -54,10 +54,10 @@ void reloop()
   Serial.print("Writing: ");
   Serial.println(sensor.toLineProtocol());
   // Write point
-  if (!client.writePoint(sensor))
+  if (!Client.writePoint(sensor))
   {
     Serial.print("InfluxDB write failed: ");
-    Serial.println(client.getLastErrorMessage());
+    Serial.println(Client.getLastErrorMessage());
   }
 
   Serial.println("Waiting 1 second");

@@ -6,7 +6,7 @@
 #include <InfluxDbCloud.h>
 
 
-extern InfluxDBClient client;
+extern InfluxDBClient Client;
 extern Point sensor; 
 
 
