@@ -16,12 +16,17 @@
 #include "COMS/influx.h"
 
 
-boolean user_in = false; 
+extern char ssid[];
+extern char pass[]; //network password saved in a secrets file 
 
-char ssid[] = SECRET_SSID;
-char pass[] = SECRET_PASS; //network password saved in a secrets file 
+static int protothreadReadDHT(struct pt *pt);
+static int protothreaddetectgas(struct pt *pt);
+static int protothreaddetectmotion(struct pt *pt);
+static int protothreadmeasurevoltage(struct pt *pt);
+static int protothreadauth(struct pt *pt);
+static int protothreadreconnect(struct pt *pt);
 
-const char MQTT_USER_ARRAY[] = MQTT_USER;
-const char MQTT_PASS_ARRAY[] = MQTT_PASS;
+
+
 
 #endif

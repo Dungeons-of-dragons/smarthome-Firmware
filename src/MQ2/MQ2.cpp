@@ -1,21 +1,24 @@
-#include <Arduino.h> 
+#include <Arduino.h>
 #include "defs.h"
 
 volatile boolean gaspresent = false;
 
-bool Gas_detected(){
+bool Gas_detected()
+{
   pinMode(blue, OUTPUT);
-  int sensorout = analogRead(MQ2_INPUT); 
-    if (sensorout > 1000) {   
-    digitalWrite (blue, HIGH); 
+  pinMode(MQ2_INPUT, INPUT);
+  int sensorout = digitalRead(MQ2_INPUT);
+  if (sensorout == 1)
+  {
+    digitalWrite(blue, HIGH);
     gaspresent = true;
-
-      return true; 
+    return true;
   }
-  else {
-    digitalWrite (blue, LOW) ; 
-    gaspresent = false; 
-    return false; 
+  else if (sensorout == 0)
+  {
+    digitalWrite(blue, LOW);
+    gaspresent = false;
+    return false;
   }
+  return false; 
 }
-  

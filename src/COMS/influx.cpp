@@ -2,14 +2,11 @@
 #include <WiFiMulti.h>
 WiFiMulti wifiMulti;
 #define DEVICE "ESP32"
-#elif defined(ESP8266)
-#include <ESP8266WiFiMulti.h>
-ESP8266WiFiMulti wifiMulti;
-#define DEVICE "ESP8266"
 #endif
 
 
 #include "influx.h"
+#include "main.h"
 
 
 // Declare InfluxDB client instance with preconfigured InfluxCloud certificate

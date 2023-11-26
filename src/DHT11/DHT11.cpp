@@ -14,3 +14,7 @@ float readhumidity(){
     return humidity;
 }
 
+bool fan_state(float temperature){
+    
+}
+

@@ -3,12 +3,10 @@
 
 #include "Arduino.h"
 
-// #define AUTHORIZED_CARDS ""
-
 //pinout definitions 
 #define DHT11PIN 26
-#define MQ2_INPUT 2
-#define CURRENT_PIN 18
+#define MQ2_INPUT 17
+#define CURRENT_PIN 34
 
 // RFID card reader pins
 #define SS_PIN 21
@@ -21,7 +19,8 @@
 
 #define lock_pin 33
 #define buzzer 27
+#define fan_pin 16
 
-#define PIR_PIN 32
+#define PIR_PIN 5
 
 #endif

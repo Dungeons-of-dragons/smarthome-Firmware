@@ -4,11 +4,11 @@
 
 LCD Lcd; // LCD instance
 
-InfluxDBClient Client(INFLUXDB_URL, INFLUXDB_ORG, INFLUXDB_BUCKET, INFLUXDB_TOKEN, InfluxDbCloud2CACert);
+char ssid[] = SECRET_SSID;
+char pass[] = SECRET_PASS;
 
-Point sensor("dht11");
 // declare three protothreads
-static struct pt ptreaddht, ptdetectgas, ptdetectmotion, ptreadvoltage, ptdoor, ptmqtt, ptreconnect;
+static struct pt ptreaddht, ptdetectgas, ptdetectmotion, ptreadvoltage, ptdoor, ptreconnect;
 
 static float temp;
 static float humid;
@@ -24,6 +24,7 @@ static float humid;
  */
 static int protothreadReadDHT(struct pt *pt)
 {
+  static struct pt ptreconnect;
   static unsigned long lastTimeread = 0;
   PT_BEGIN(pt);
   while (1)
@@ -38,6 +39,7 @@ static int protothreadReadDHT(struct pt *pt)
     sensor.clearFields();
     sensor.addField("temperature", temp);
     sensor.addField("humidity", humid);
+    PT_SPAWN(pt, &ptreconnect, protothreadreconnect(&ptreconnect));
     PT_YIELD(pt);
   }
   PT_END(pt);
