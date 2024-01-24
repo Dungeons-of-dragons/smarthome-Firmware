@@ -17,34 +17,6 @@ void door_initialize()
   mfrc522.PCD_Init();
 }
 
-bool card_authorization()
-{
-  String content = "";
-  for (byte i = 0; i < mfrc522.uid.size; i++)
-  {
-    content.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
-    content.concat(String(mfrc522.uid.uidByte[i], HEX));
-  }
-  Serial.println();
-  Serial.print("Message : ");
-  content.toUpperCase();
-  if (content.substring(1) == "73 78 D3 1C") // Make sure you change this with your own UID number
-  {
-    // access granted
-    Serial.println("Authorised access");
-    digitalWrite(buzzer, HIGH);
-    digitalWrite(lock_pin, LOW);
-    return true;
-  }
-  else
-  {
-    Serial.println(" Access denied");
-    digitalWrite(lock_pin, LOW); // if relay is open LOW
-    delay(1000);
-    return false;
-  }
-  return false; 
-}
 
 void check_for_card()
 {
@@ -59,3 +31,32 @@ void check_for_card()
     return;
   }
 }
+
+
+bool card_authorization()
+{
+  String content = "";
+  for (byte i = 0; i < mfrc522.uid.size; i++)
+  {
+    content.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
+    content.concat(String(mfrc522.uid.uidByte[i], HEX));
+  }
+  content.toUpperCase();
+  if (content.substring(1) == "73 78 D3 1C") // Make sure you change this with your own UID number
+  {
+    // access granted
+    Serial.println("Authorised access");
+    digitalWrite(buzzer, HIGH);
+    digitalWrite(lock_pin, LOW);
+    return true;
+  }
+  else
+  {
+    Serial.println(" Access denied");
+    digitalWrite(lock_pin, LOW); // if relay is open LOW
+    return false;
+  }
+  return false; 
+}
+
+

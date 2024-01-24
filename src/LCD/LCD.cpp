@@ -52,10 +52,11 @@ void LCD::displaydht(float temp, float humidity)
  *
  * @param userin
  */
-void LCD::displayuserstate(bool userin)
+void LCD::displayuserdenied()
 {
     lcd.clear();
     lcd.setCursor(0, 0);
+    lcd.print("locked out");
 }
 
 /**
@@ -95,9 +96,9 @@ void LCD::displaypower(double Watt, double AmpsRMS)
 {
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.println("Power used: ");
+    lcd.println("Power:");
     lcd.print(Watt);
     lcd.setCursor(0, 1);
-    lcd.println("Current Drawn: ");
+    lcd.println("Current:");
     lcd.print(AmpsRMS);
 }

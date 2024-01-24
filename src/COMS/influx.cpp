@@ -1,19 +1,17 @@
 #if defined(ESP32)
+#define DEVICE "ESP32"
 #include <WiFiMulti.h>
 WiFiMulti wifiMulti;
-#define DEVICE "ESP32"
 #endif
-
 
 #include "influx.h"
 #include "main.h"
-
 
 // Declare InfluxDB client instance with preconfigured InfluxCloud certificate
 InfluxDBClient Client(INFLUXDB_URL, INFLUXDB_ORG, INFLUXDB_BUCKET, INFLUXDB_TOKEN, InfluxDbCloud2CACert);
 
 // Declare Data point
-Point sensor("dht11");
+Point sensor("sensors");
 
 void influx_setup()
 {
@@ -32,31 +30,8 @@ void influx_setup()
   {
     Serial.print("InfluxDB connection failed: ");
     Serial.println(Client.getLastErrorMessage());
-
-    sensor.addTag("device", DEVICE);
-    sensor.addTag("SSID", WiFi.SSID());
-  }
-}
-
-void reloop()
-{
-  // Clear fields for reusing the point. Tags will remain the same as set above.
-  sensor.clearFields();
-
-  // Store measured value into point
-  // Report RSSI of currently connected network
-  sensor.addField("rssi", WiFi.RSSI());
-
-  // Print what are we exactly writing
-  Serial.print("Writing: ");
-  Serial.println(sensor.toLineProtocol());
-  // Write point
-  if (!Client.writePoint(sensor))
-  {
-    Serial.print("InfluxDB write failed: ");
-    Serial.println(Client.getLastErrorMessage());
   }
 
-  Serial.println("Waiting 1 second");
-  delay(1000);
+  sensor.addTag("device", DEVICE);
+  sensor.addTag("SSID", WiFi.SSID());
 }

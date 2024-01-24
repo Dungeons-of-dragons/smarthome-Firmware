@@ -1,7 +1,7 @@
 #ifndef DEFS_H
 #define DEFS_H 
 
-#include "Arduino.h"
+#include <Arduino.h>
 
 //pinout definitions 
 #define DHT11PIN 26
@@ -10,7 +10,7 @@
 
 // RFID card reader pins
 #define SS_PIN 21
-#define RST_PIN 22
+#define RST_PIN 1
 
 // Led pinouts 
 #define red 13

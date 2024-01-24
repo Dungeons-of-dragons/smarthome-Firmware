@@ -8,10 +8,10 @@ char ssid[] = SECRET_SSID;
 char pass[] = SECRET_PASS;
 
 // declare three protothreads
-static struct pt ptreaddht, ptdetectgas, ptdetectmotion, ptreadvoltage, ptdoor, ptreconnect;
+static struct pt ptreaddht, ptdetectgas, ptdetectmotion, ptreadvoltage, ptdoor, ptreconnect, ptauth;
 
-static float temp;
-static float humid;
+float temp;
+float humid;
 
 // First protothread function to read DHT  every 5 second
 /**
@@ -24,15 +24,14 @@ static float humid;
  */
 static int protothreadReadDHT(struct pt *pt)
 {
-  static struct pt ptreconnect;
   static unsigned long lastTimeread = 0;
   PT_BEGIN(pt);
   while (1)
   {
     lastTimeread = millis();
-    PT_WAIT_UNTIL(pt, millis() - lastTimeread > interval);
     temp = readtemp();
     humid = readhumidity();
+    PT_WAIT_UNTIL(pt, millis() - lastTimeread > interval);
     Serial.printf("temp: %.3f, humid: %.3f\n", temp, humid);
     Lcd.displaydht(temp, humid);
     //@todo insert user code to publish topics
@@ -54,10 +53,14 @@ static int protothreaddetectgas(struct pt *pt)
   {
     lastTimeread = millis();
     PT_WAIT_UNTIL(pt, Gas_detected);
+    boolean gaspresent = Gas_detected();
+    sensor.clearFields();
+    sensor.addField("mq2", gaspresent);
+    PT_WAIT_UNTIL(pt, millis() - lastTimeread > 18000);
     ets_printf("gas detected");
-    //@todo insert user functions to signal the user
     PT_WAIT_UNTIL(pt, !Gas_detected);
     //@todo insert user code to notify )
+    PT_SPAWN(pt, &ptreconnect, protothreadreconnect(&ptreconnect));
   }
   PT_END(pt);
 }
@@ -66,17 +69,24 @@ static int protothreaddetectgas(struct pt *pt)
 static int protothreaddetectmotion(struct pt *pt)
 {
   static unsigned long lastTimeread = 0;
+  static unsigned long smartdelay = 0;
   PT_BEGIN(pt);
   while (1)
   {
     lastTimeread = millis();
+    smartdelay = millis();
     PT_WAIT_UNTIL(pt, (motiondetected));
     movement_detection();
+    PT_WAIT_UNTIL(pt, millis() - smartdelay > 3000);
+    sensor.clearFields();
+    sensor.addField("pir", motiondetected);
     PT_WAIT_UNTIL(pt, (motiondetected && (millis() - lastTimeread > interval)));
     ets_printf("Motion has stopped\n ");
     digitalWrite(red, LOW);
     digitalWrite(green, HIGH);
     motiondetected = false;
+    sensor.addField("pir", motiondetected);
+    PT_SPAWN(pt, &ptreconnect, protothreadreconnect(&ptreconnect));
   }
   PT_END(pt);
 }
@@ -86,19 +96,24 @@ float avgvolt;
 double avgwatt;
 static int protothreadmeasurevoltage(struct pt *pt)
 {
-  static unsigned long lastTImeread = 0;
+  static unsigned long lastTimereadvolt = 0;
   PT_BEGIN(pt);
   while (1)
   {
-    lastTImeread = millis();
-    PT_WAIT_UNTIL(pt, millis() - lastTImeread > intervolt);
+    lastTimereadvolt = millis();
     avgvolt = readvoltage();
     avgwatt = getWatts();
+    PT_WAIT_UNTIL(pt, millis() - lastTimereadvolt > 8000);
 
     Serial.printf("Average voltage is %.3f, average watt is %d \n", avgvolt, avgwatt);
     Lcd.displaypower(avgwatt, avgvolt);
     // @todo insert user code to publish to broker
+    sensor.clearFields();
+    sensor.addField("power", avgwatt);
+    sensor.addField("voltage", avgvolt);
+    PT_SPAWN(pt, &ptreconnect, protothreadreconnect(&ptreconnect));
     PT_YIELD(pt);
+    PT_EXIT(pt);
   }
   PT_END(pt);
 }
@@ -129,6 +144,7 @@ static int protothreadauth(struct pt *pt)
     digitalWrite(buzzer, LOW);
     lastTimeread = millis();
     Lcd.displayauthorised(authorize);
+    Lcd.displayuserdenied();
     PT_WAIT_UNTIL(pt, millis() - lastTimeread > 5000);
     authorize = card_authorization;
     PT_WAIT_UNTIL(pt, authorize == false);
