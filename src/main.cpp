@@ -1,15 +1,23 @@
 #include "main.h"
-#include <pt.h> 
+#include <pt.h>
+#include <string.h>
+
+LCD Lcd; // LCD instance
+
+char ssid[] = SECRET_SSID;
+char pass[] = SECRET_PASS;
 
 // declare three protothreads
-static struct pt ptreaddht, ptdetectgas, ptdetectmotion, ptreadvoltage;
+static struct pt ptreaddht, ptdetectgas, ptdetectmotion, ptreadvoltage, ptdoor, ptreconnect, ptauth;
 
+float temp;
+float humid;
 
 // First protothread function to read DHT  every 5 second
 /**
- * The function "protothreadReadDHT" reads temperature and humidity values from a sensor every 5
+ * @brief  function "protothreadReadDHT" reads temperature and humidity values from a sensor every 5
  * seconds and prints them to the serial monitor.
- * 
+ *
  * @param pt The parameter "pt" is a pointer to a struct of type "pt". This struct is used to implement
  * a protothread, which is a lightweight cooperative multitasking mechanism. The protothreadReadDHT
  * function is defined to take a pointer to this struct as a parameter so that it can use it
@@ -18,69 +26,185 @@ static int protothreadReadDHT(struct pt *pt)
 {
   static unsigned long lastTimeread = 0;
   PT_BEGIN(pt);
-  while(1) {
+  while (1)
+  {
     lastTimeread = millis();
+    temp = readtemp();
+    humid = readhumidity();
     PT_WAIT_UNTIL(pt, millis() - lastTimeread > interval);
-    float temp = readtemp();
-    float humid = readhumidity(); 
     Serial.printf("temp: %.3f, humid: %.3f\n", temp, humid);
-    //@todo insert user code to publish topics 
+    Lcd.displaydht(temp, humid);
+    //@todo insert user code to publish topics
+    sensor.clearFields();
+    sensor.addField("temperature", temp);
+    sensor.addField("humidity", humid);
+    PT_SPAWN(pt, &ptreconnect, protothreadreconnect(&ptreconnect));
+    PT_YIELD(pt);
   }
   PT_END(pt);
 }
 
-
-//second protothread to check for gas presence
-static int protothreaddetectgas(struct pt *pt){
-  static unsigned long lastTimeread = 0; 
+// second protothread to check for gas presence
+static int protothreaddetectgas(struct pt *pt)
+{
+  static unsigned long lastTimeread = 0;
   PT_BEGIN(pt);
-  while(1){
+  while (1)
+  {
     lastTimeread = millis();
     PT_WAIT_UNTIL(pt, Gas_detected);
+    boolean gaspresent = Gas_detected();
+    sensor.clearFields();
+    sensor.addField("mq2", gaspresent);
+    PT_WAIT_UNTIL(pt, millis() - lastTimeread > 18000);
     ets_printf("gas detected");
-    //@todo insert user functions to signal the user 
     PT_WAIT_UNTIL(pt, !Gas_detected);
-    //@todo insert user code to notify user 
+    //@todo insert user code to notify )
+    PT_SPAWN(pt, &ptreconnect, protothreadreconnect(&ptreconnect));
   }
   PT_END(pt);
 }
 
-//third protothread to detect motion 
-static int protothreaddetectmotion(struct pt *pt){
-  static unsigned long lastTimeread =0;
+// third protothread to detect motion
+static int protothreaddetectmotion(struct pt *pt)
+{
+  static unsigned long lastTimeread = 0;
+  static unsigned long smartdelay = 0;
   PT_BEGIN(pt);
-  while(1){
+  while (1)
+  {
     lastTimeread = millis();
+    smartdelay = millis();
     PT_WAIT_UNTIL(pt, (motiondetected));
     movement_detection();
-    PT_WAIT_UNTIL(pt, (motiondetected && (millis()- lastTimeread > interval)));
+    PT_WAIT_UNTIL(pt, millis() - smartdelay > 3000);
+    sensor.clearFields();
+    sensor.addField("pir", motiondetected);
+    PT_WAIT_UNTIL(pt, (motiondetected && (millis() - lastTimeread > interval)));
     ets_printf("Motion has stopped\n ");
     digitalWrite(red, LOW);
-    digitalWrite(green,HIGH);
+    digitalWrite(green, HIGH);
     motiondetected = false;
+    sensor.addField("pir", motiondetected);
+    PT_SPAWN(pt, &ptreconnect, protothreadreconnect(&ptreconnect));
   }
   PT_END(pt);
 }
 
-// fourth protothread to measure voltage 
-static int protothreadmeasurevoltage(struct pt *pt){
-  static unsigned long lastTImeread = 0; 
+// fourth protothread to measure voltage
+float avgvolt;
+double avgwatt;
+static int protothreadmeasurevoltage(struct pt *pt)
+{
+  static unsigned long lastTimereadvolt = 0;
   PT_BEGIN(pt);
-  while(1){
-    lastTImeread = millis();
-    PT_WAIT_UNTIL(pt, millis()- lastTImeread > intervolt);
-    float avgvolt = readvoltage();
-    double avgwatt = getWatts();
-    Serial.printf("Average voltage is %.3f, average watt is %d \n",avgvolt,avgwatt);
-    // @todo insert user code to publish to broker 
+  while (1)
+  {
+    lastTimereadvolt = millis();
+    avgvolt = readvoltage();
+    avgwatt = getWatts();
+    PT_WAIT_UNTIL(pt, millis() - lastTimereadvolt > 8000);
+
+    Serial.printf("Average voltage is %.3f, average watt is %d \n", avgvolt, avgwatt);
+    Lcd.displaypower(avgwatt, avgvolt);
+    // @todo insert user code to publish to broker
+    sensor.clearFields();
+    sensor.addField("power", avgwatt);
+    sensor.addField("voltage", avgvolt);
+    PT_SPAWN(pt, &ptreconnect, protothreadreconnect(&ptreconnect));
+    PT_YIELD(pt);
+    PT_EXIT(pt);
   }
   PT_END(pt);
 }
 
+/**
+ * @brief this protothread handles authorization of the user at the door
+ * @param pt the pointer to the pt struct
+ *
+ * @todo implment spawning a child process to yield control
+ *
+ */
+static bool authorize;
+static int protothreadauth(struct pt *pt)
+{
+  static unsigned long lastTimeread = 0;
+  PT_BEGIN(pt);
+  while (1)
+  {
+    lastTimeread = millis();
+    PT_WAIT_UNTIL(pt, millis() - lastTimeread > doorinterval);
+    check_for_card();
+    authorize = card_authorization;
+    PT_WAIT_UNTIL(pt, authorize == true);
+    digitalWrite(buzzer, HIGH);
+    digitalWrite(lock_pin, LOW);
+    lastTimeread = millis();
+    PT_WAIT_UNTIL(pt, millis() - lastTimeread > 1000);
+    digitalWrite(buzzer, LOW);
+    lastTimeread = millis();
+    Lcd.displayauthorised(authorize);
+    Lcd.displayuserdenied();
+    PT_WAIT_UNTIL(pt, millis() - lastTimeread > 5000);
+    authorize = card_authorization;
+    PT_WAIT_UNTIL(pt, authorize == false);
+  }
+  PT_END(pt);
+}
+
+static int protothreadreconnect(struct pt *pt)
+{
+  static unsigned long lastTimeread = 0;
+  PT_BEGIN(pt);
+  while (1)
+  {
+    lastTimeread = millis();
+    PT_WAIT_UNTIL(pt, !Client.writePoint(sensor));
+    PT_WAIT_UNTIL(pt, millis() - lastTimeread > 2000);
+    Serial.print("InfluxDB write failed: ");
+    Serial.println(Client.getLastErrorMessage());
+    PT_EXIT(pt);
+  }
+  PT_END(pt);
+}
+
+// RFID/Relay protothread
+// static int protothreaddoor(struct pt *pt)
+// {
+//   static unsigned long lastTimeread = 0;
+//   PT_BEGIN(pt);
+
+//   while (1)
+//   {
+//     lastTimeread = millis();
+//     check_for_card();
+//     authorize = card_authorization();
+
+//     if (authorize == true)
+//     {
+//       digitalWrite(buzzer, HIGH);
+//       digitalWrite(lock_pin, LOW);
+//       lastTimeread = millis();
+//       PT_WAIT_UNTIL(pt, millis() - lastTimeread > 1000);
+//       digitalWrite(buzzer, LOW);
+//       lastTimeread = millis();
+//       PT_WAIT_UNTIL(pt, millis() - lastTimeread > 5000);
+//       digitalWrite(lock_pin, HIGH);
+//       Lcd.displayauthorised(authorize);
+//     }
+//     else
+//     {
+//       lastTimeread = 0;
+//       PT_WAIT_UNTIL(pt, millis() - lastTimeread > 1000);
+//       Lcd.displayauthorised(authorize);
+//     }
+//   }
+//   PT_END(pt);
+// }
 
 // Use events to avoid blocking code
 /**
- * The function "connected_to_ap" prints a message indicating that the device has successfully
+ * @brief The function "connected_to_ap" prints a message indicating that the device has successfully
  * connected to a WiFi network.
  *
  * @param wifi_event The wifi_event parameter is of type WiFiEvent_t, which is an enumeration that
@@ -98,7 +222,7 @@ void connected_to_ap(WiFiEvent_t wifi_event, WiFiEventInfo_t wifi_info)
 
 // Handle disconnection
 /**
- * The function handles the event of being disconnected from a WiFi access point and attempts to
+ * @brief The function handles the event of being disconnected from a WiFi access point and attempts to
  * reconnect.
  *
  * @param wifi_event The wifi_event parameter is of type WiFiEvent_t, which is an enumeration that
@@ -115,7 +239,7 @@ void disconnected_from_ap(WiFiEvent_t wifi_event, WiFiEventInfo_t wifi_info)
 }
 
 /**
- * prints the local IP address of the ESP32 when it successfully connects to an access point.
+ * @brief prints the local IP address of the ESP32 when it successfully connects to an access point.
  *
  * @param wifi_event
  * @param wifi_info
@@ -127,34 +251,38 @@ void got_ip_from_ap(WiFiEvent_t wifi_event, WiFiEventInfo_t wifi_info)
   Serial.println(WiFi.localIP());
 }
 
-
 void setup()
 {
   Serial.begin(115200);
   delay(1000);
-
+  // Setting up WiFi connection
   WiFi.onEvent(connected_to_ap, ARDUINO_EVENT_WIFI_STA_CONNECTED);
   WiFi.onEvent(got_ip_from_ap, ARDUINO_EVENT_WIFI_STA_GOT_IP);
   WiFi.onEvent(disconnected_from_ap, ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
   WiFi.begin(ssid, pass);
   Serial.println("\nConnecting");
 
+  // setting up and initializing sensors
+  Lcd.lcd_initialize();
   motion_setup();
+  door_initialize();
+  influx_setup();
 
   PT_INIT(&ptreaddht);
   PT_INIT(&ptdetectgas);
   PT_INIT(&ptdetectmotion);
   PT_INIT(&ptreadvoltage);
+  // PT_INIT(&ptdoor);
+  PT_INIT(&ptreconnect);
 }
-
-
 
 void loop()
 {
+  // Getting sensor readings and implementing necesarry actions regarding them
   protothreadReadDHT(&ptreaddht);
   protothreaddetectgas(&ptdetectgas);
   protothreaddetectmotion(&ptdetectmotion);
   protothreadmeasurevoltage(&ptreadvoltage);
+  protothreadreconnect(&ptreconnect);
+  // protothreaddoor(&ptdoor);
 }
-
-

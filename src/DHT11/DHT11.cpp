@@ -14,3 +14,12 @@ float readhumidity(){
     return humidity;
 }
 
+bool fan_state(float temperature){
+    if (temperature > 27.0){
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
